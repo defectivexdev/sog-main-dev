@@ -125,12 +125,12 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
               defaultValue={house.id}
               className="sog-input" 
               style={{ width: "200px", padding: "8px 12px" }}
-              onChange={(e) => e.target.form?.submit()}
             >
               {allHouses.map((h: any) => (
                 <option key={h.id} value={h.id}>{h.name}</option>
               ))}
             </select>
+            <button type="submit" className="btn-gold" style={{ padding: "6px 12px", borderRadius: "8px" }}>ไป</button>
           </form>
         )}
       </div>
