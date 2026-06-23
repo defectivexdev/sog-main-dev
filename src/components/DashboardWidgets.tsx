@@ -25,6 +25,19 @@ export default function DashboardWidgets() {
   }
 
   if (!data) return null;
+  if (data.error) {
+    return (
+      <div style={{ color: "#f87171", textAlign: "center", padding: "40px", background: "rgba(248,113,113,0.1)", borderRadius: "12px", marginTop: "16px" }}>
+        เกิดข้อผิดพลาดในการโหลดข้อมูล: {data.error}
+      </div>
+    );
+  }
+
+  // Ensure arrays exist
+  const safeChartData = Array.isArray(data.chartData) ? data.chartData : [];
+  const safeTimeline = Array.isArray(data.timeline) ? data.timeline : [];
+  const safeTopDonators = Array.isArray(data.topDonators) ? data.topDonators : [];
+
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px", marginTop: "16px" }}>
@@ -42,7 +55,7 @@ export default function DashboardWidgets() {
         
         <div style={{ flex: 1, width: "100%", height: "250px" }}>
           <ResponsiveContainer width="99%" minHeight={250}>
-            <AreaChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={safeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#c9a227" stopOpacity={0.8}/>
@@ -76,13 +89,13 @@ export default function DashboardWidgets() {
         </h3>
         
         <div style={{ flex: 1, overflowY: "auto", paddingRight: "8px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {data.timeline.length === 0 ? (
+          {safeTimeline.length === 0 ? (
             <div style={{ color: "#94a3b8", textAlign: "center", marginTop: "20px" }}>ไม่มีความเคลื่อนไหว</div>
           ) : (
-            data.timeline.map((item: any, idx: number) => (
+            safeTimeline.map((item: any, idx: number) => (
               <div key={item.id} style={{ display: "flex", gap: "12px", position: "relative" }}>
                 {/* Timeline Line */}
-                {idx !== data.timeline.length - 1 && (
+                {idx !== safeTimeline.length - 1 && (
                   <div style={{ position: "absolute", left: "15px", top: "30px", bottom: "-16px", width: "2px", background: "rgba(255,255,255,0.05)" }} />
                 )}
                 
@@ -125,7 +138,7 @@ export default function DashboardWidgets() {
             <Medal size={18} color="#fbbf24" /> สายเปย์ 7 วันล่าสุด
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", flex: 1, justifyContent: "center" }}>
-            {data.topDonators && data.topDonators.length > 0 ? data.topDonators.map((d: any, i: number) => (
+            {safeTopDonators.length > 0 ? safeTopDonators.map((d: any, i: number) => (
               <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ color: i === 0 ? "#fbbf24" : i === 1 ? "#94a3b8" : "#b45309", fontWeight: 800 }}>#{i + 1}</span>
