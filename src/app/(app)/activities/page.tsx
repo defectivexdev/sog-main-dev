@@ -63,7 +63,7 @@ export default function ActivitiesPage() {
   const handleRandomize = (id: string, participants: string[]) => {
     const size = teamSizes[id] || 5;
     const shuffled = [...participants].sort(() => 0.5 - Math.random());
-    const result = [];
+    const result: string[][] = [];
     for (let i = 0; i < shuffled.length; i += size) {
       result.push(shuffled.slice(i, i + size));
     }
