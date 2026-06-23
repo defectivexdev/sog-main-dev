@@ -52,7 +52,7 @@ export default async function DashboardPage() {
     chartDataMap[dateStr] = { income: 0, expense: 0 };
   }
 
-  payments.forEach(p => {
+  payments.forEach((p: any) => {
     const dateStr = new Date(p.date).toLocaleDateString("th-TH", { day: 'numeric', month: 'short' });
     if (chartDataMap[dateStr]) {
       if (p.type === "income") chartDataMap[dateStr].income += p.amount;
