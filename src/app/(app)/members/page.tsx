@@ -150,7 +150,7 @@ function MembersContent() {
 
       {loading ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px" }}>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_: any, i: any) => (
             <div key={i} className="glass-card" style={{ padding: "24px 16px", textAlign: "center" }}>
               <Skeleton width="70px" height="70px" borderRadius="50%" style={{ margin: "0 auto 16px" }} />
               <Skeleton width="60%" height="20px" style={{ margin: "0 auto 8px" }} />
@@ -161,7 +161,7 @@ function MembersContent() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px" }}>
-          {filtered.map((m, i) => (
+          {filtered.map((m: any, i: any) => (
             <motion.div 
               key={m.id} 
               initial={{ opacity: 0, scale: 0.95 }} 
@@ -293,7 +293,7 @@ function MembersContent() {
                       {profileHistory.length === 0 ? (
                         <div style={{ textAlign: "center", color: "#64748b", padding: "20px", background: "rgba(255,255,255,0.02)", borderRadius: "10px" }}>ยังไม่มีประวัติการทำรายการ</div>
                       ) : (
-                        profileHistory.map((h, i) => (
+                        profileHistory.map((h: any, i: any) => (
                           <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", background: "rgba(0,0,0,0.3)", borderRadius: "10px" }}>
                             <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: h.type === "payment" ? "rgba(16,185,129,0.2)" : h.type === "leave" ? "rgba(248,113,113,0.2)" : "rgba(139,92,246,0.2)", color: h.type === "payment" ? "#34d399" : h.type === "leave" ? "#f87171" : "#a78bfa", display: "flex", alignItems: "center", justifyContent: "center" }}>
                               {h.type === "payment" ? <DollarSign size={16} /> : h.type === "leave" ? <ClipboardList size={16} /> : <PackageCheck size={16} />}

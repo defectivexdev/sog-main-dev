@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     const summaryMap: Record<string, any> = {};
 
     // Initialize map
-    members.forEach(m => {
+    members.forEach((m: any) => {
       const displayName = m.icName || m.name;
       summaryMap[displayName] = {
         name: displayName,
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Process attendance
-    attendances.forEach(a => {
+    attendances.forEach((a: any) => {
       const name = a.memberName;
       if (!summaryMap[name]) {
         summaryMap[name] = { name, role: "member", present: 0, late: 0, absent: 0, leave: 0 };
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Process leaves
-    leaves.forEach(l => {
+    leaves.forEach((l: any) => {
       const name = l.memberName;
       if (!summaryMap[name]) {
         summaryMap[name] = { name, role: "member", present: 0, late: 0, absent: 0, leave: 0 };

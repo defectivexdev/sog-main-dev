@@ -118,7 +118,7 @@ export default function AnnouncementsPage() {
         ) : announcements.length === 0 ? (
           <div className="glass-card" style={{ padding: "60px", textAlign: "center", color: "#64748b" }}>ยังไม่มีประกาศจากผู้ดูแลแก๊งค์</div>
         ) : (
-          announcements.map((ann, i) => (
+          announcements.map((ann: any, i: any) => (
             <motion.div key={ann.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card" style={{ padding: "24px", position: "relative", borderLeft: ann.isPinned ? "4px solid #c9a227" : "1px solid rgba(255,255,255,0.05)" }}>
               {ann.isPinned && (
                 <div style={{ position: "absolute", top: "24px", right: "24px", color: "#c9a227" }} title="ปักหมุด">

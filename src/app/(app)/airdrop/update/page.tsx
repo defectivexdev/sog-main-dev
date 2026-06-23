@@ -24,8 +24,8 @@ export default function AirdropUpdatePage() {
 
   const addItem = () => setForm(f => ({ ...f, items: [...f.items, emptyItem()] }));
   const updateItem = (i: number, field: keyof AirdropItem, val: string | number) =>
-    setForm(f => ({ ...f, items: f.items.map((it, idx) => idx === i ? { ...it, [field]: val } : it) }));
-  const removeItem = (i: number) => setForm(f => ({ ...f, items: f.items.filter((_, idx) => idx !== i) }));
+    setForm(f => ({ ...f, items: f.items.map((it: any, idx: any) => idx === i ? { ...it, [field]: val } : it) }));
+  const removeItem = (i: number) => setForm(f => ({ ...f, items: f.items.filter((_: any, idx: any) => idx !== i) }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +70,7 @@ export default function AirdropUpdatePage() {
                 <label style={{ color: "#94a3b8", fontSize: "0.8rem" }}>รายการของ</label>
                 <button type="button" onClick={addItem} style={{ padding: "5px 12px", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "6px", color: "#c9a227", cursor: "pointer", fontSize: "0.8rem" }}>+ เพิ่มรายการ</button>
               </div>
-              {form.items.map((item, i) => (
+              {form.items.map((item: any, i: any) => (
                 <div key={i} style={{ padding: "16px", background: "rgba(15,22,41,0.5)", borderRadius: "10px", border: "1px solid rgba(201,162,39,0.1)", marginBottom: "10px" }}>
                   <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: "10px", marginBottom: "10px", alignItems: "end" }}>
                     <div><label style={{ color: "#64748b", fontSize: "0.75rem", display: "block", marginBottom: "4px" }}>ชื่อของ</label><input className="sog-input" value={item.name} onChange={e => updateItem(i, "name", e.target.value)} placeholder="ชื่อของ" required /></div>
@@ -95,7 +95,7 @@ export default function AirdropUpdatePage() {
       )}
 
       {/* Sessions list */}
-      {loading ? <p style={{ color: "#64748b" }}>กำลังโหลด...</p> : sessions.map(s => (
+      {loading ? <p style={{ color: "#64748b" }}>กำลังโหลด...</p> : sessions.map((s: any) => (
         <div key={s._id} className="glass-card" style={{ padding: "20px 24px", marginBottom: "12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -112,7 +112,7 @@ export default function AirdropUpdatePage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
-            {s.items.map((item, i) => (
+            {s.items.map((item: any, i: any) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px", background: "rgba(201,162,39,0.08)", borderRadius: "20px", border: "1px solid rgba(201,162,39,0.15)" }}>
                 {item.imageUrl && <Image src={item.imageUrl} alt={item.name} width={18} height={18} style={{ borderRadius: "3px", objectFit: "cover" }} />}
                 <span style={{ color: "#c9a227", fontSize: "0.78rem" }}>{item.name} ({item.quantity} {item.unit})</span>

@@ -65,7 +65,7 @@ export default function ActivityFeed({ items }: FeedProps) {
         {items.length === 0 ? (
           <div style={{ textAlign: "center", color: "#64748b", padding: "40px 0" }}>ไม่มีความเคลื่อนไหวล่าสุด</div>
         ) : (
-          items.map((item, i) => (
+          items.map((item: any, i: any) => (
             <motion.div 
               key={item.id}
               initial={{ opacity: 0, x: -10 }}

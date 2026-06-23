@@ -93,7 +93,7 @@ export default function AttendancePage() {
   const todayStr = new Date().toISOString().split("T")[0];
   const todayRecords = records.filter((r) => r.date.startsWith(todayStr));
 
-  const filteredSummary = summaryData.filter(s => 
+  const filteredSummary = summaryData.filter((s: any) => 
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -176,7 +176,7 @@ export default function AttendancePage() {
                         { val: "present", icon: "✅", label: "มา", color: "#34d399", bg: "rgba(52,211,153,0.1)" },
                         { val: "late", icon: "⏰", label: "มาสาย", color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
                         { val: "absent", icon: "❌", label: "ขาด", color: "#f87171", bg: "rgba(248,113,113,0.1)" }
-                      ].map(s => (
+                      ].map((s: any) => (
                         <div key={s.val} onClick={() => setForm({...form, status: s.val})} style={{ flex: 1, padding: "10px", textAlign: "center", borderRadius: "10px", cursor: "pointer", border: form.status === s.val ? `1px solid ${s.color}` : "1px solid rgba(255,255,255,0.1)", background: form.status === s.val ? s.bg : "rgba(0,0,0,0.2)", transition: "all 0.2s" }}>
                           <span style={{ fontSize: "1.2rem", display: "block", marginBottom: "4px" }}>{s.icon}</span>
                           <span style={{ color: form.status === s.val ? s.color : "#94a3b8", fontSize: "0.8rem", fontWeight: 600 }}>{s.label}</span>
@@ -207,21 +207,21 @@ export default function AttendancePage() {
                   <div style={{ padding: "10px", background: "rgba(52,211,153,0.2)", borderRadius: "10px" }}><CheckCircle2 size={24} color="#34d399" /></div>
                   <div>
                     <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 600, display: "block" }}>มาวันนี้</span>
-                    <span style={{ color: "#34d399", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter(r=>r.status==="present").length}</span>
+                    <span style={{ color: "#34d399", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter((r: any) =>r.status==="present").length}</span>
                   </div>
                 </div>
                 <div style={{ flex: 1, padding: "14px 20px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.2)", borderRadius: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ padding: "10px", background: "rgba(251,191,36,0.2)", borderRadius: "10px" }}><Clock size={24} color="#fbbf24" /></div>
                   <div>
                     <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 600, display: "block" }}>มาสาย</span>
-                    <span style={{ color: "#fbbf24", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter(r=>r.status==="late").length}</span>
+                    <span style={{ color: "#fbbf24", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter((r: any) =>r.status==="late").length}</span>
                   </div>
                 </div>
                 <div style={{ flex: 1, padding: "14px 20px", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ padding: "10px", background: "rgba(248,113,113,0.2)", borderRadius: "10px" }}><UserX size={24} color="#f87171" /></div>
                   <div>
                     <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: 600, display: "block" }}>ขาด</span>
-                    <span style={{ color: "#f87171", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter(r=>r.status==="absent").length}</span>
+                    <span style={{ color: "#f87171", fontWeight: 800, fontSize: "1.5rem" }}>{todayRecords.filter((r: any) =>r.status==="absent").length}</span>
                   </div>
                 </div>
               </div>
@@ -256,10 +256,10 @@ export default function AttendancePage() {
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <CalendarIcon size={20} color="#c9a227" />
                 <select className="sog-input" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} style={{ width: "160px", padding: "8px 12px", height: "auto" }}>
-                  {THAI_MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                  {THAI_MONTHS.map((m: any, i: any) => <option key={i} value={i}>{m}</option>)}
                 </select>
                 <select className="sog-input" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} style={{ width: "120px", padding: "8px 12px", height: "auto" }}>
-                  {[...Array(5)].map((_, i) => {
+                  {[...Array(5)].map((_: any, i: any) => {
                     const y = new Date().getFullYear() - 2 + i;
                     return <option key={y} value={y}>{y + 543}</option>; // Display Thai year
                   })}
@@ -296,7 +296,7 @@ export default function AttendancePage() {
                   </thead>
                   <tbody>
                     {filteredSummary.length === 0 ? <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>ไม่มีข้อมูลในเดือนนี้</td></tr>
-                    : filteredSummary.map((s, i) => {
+                    : filteredSummary.map((s: any, i: any) => {
                       const isWarning = s.absent >= 3 || (s.late + s.absent >= 5);
                       
                       return (

@@ -111,7 +111,7 @@ export default function ActivitiesPage() {
       {loading ? <p style={{ color: "#64748b" }}>กำลังโหลด...</p> : (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {activities.length === 0 ? <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>ยังไม่มีกิจกรรม</div>
-          : activities.map(a => {
+          : activities.map((a: any) => {
             const isJoined = a.participants.includes((user?.icName || user?.name) || "");
             const isFull = a.maxParticipants ? a.participants.length >= a.maxParticipants : false;
             return (
@@ -167,7 +167,7 @@ export default function ActivitiesPage() {
                   <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                     <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "8px", fontWeight: 600 }}>ผู้เข้าร่วม ({a.participants.length}):</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
-                      {a.participants.map(p => (
+                      {a.participants.map((p: any) => (
                          <span key={p} style={{ padding: "4px 12px", borderRadius: "20px", background: "rgba(201,162,39,0.1)", color: "#c9a227", fontSize: "0.8rem", border: "1px solid rgba(201,162,39,0.2)", display: "flex", alignItems: "center", gap: "6px" }}>
                            {p}
                            {isManager && (
@@ -187,7 +187,7 @@ export default function ActivitiesPage() {
 
                         {randomTeams[a._id] && (
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "10px" }}>
-                            {randomTeams[a._id].map((team, i) => (
+                            {randomTeams[a._id].map((team: any, i: any) => (
                               <div key={i} style={{ background: "rgba(88,101,242,0.15)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(88,101,242,0.3)" }}>
                                 <p style={{ color: "#a5b4fc", fontSize: "0.8rem", fontWeight: 700, margin: "0 0 6px" }}>ทีมที่ {i + 1}</p>
                                 <p style={{ color: "white", margin: 0, fontSize: "0.85rem", lineHeight: 1.5 }}>{team.join(", ")}</p>

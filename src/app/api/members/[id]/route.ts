@@ -28,11 +28,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ]);
 
     let history: any[] = [];
-    recentHistoryRaw[0].forEach(l => history.push({ type: "leave", title: `ลางาน: ${l.reason}`, date: l.createdAt, status: l.status }));
-    recentHistoryRaw[1].forEach(p => history.push({ type: "payment", title: `ส่งเงิน: ฿${p.amount}`, date: p.createdAt, status: p.status }));
-    recentHistoryRaw[2].forEach(r => history.push({ type: "requisition", title: `เบิก: ${r.itemName}`, date: r.createdAt, status: r.status }));
+    recentHistoryRaw[0].forEach((l: any) => history.push({ type: "leave", title: `ลางาน: ${l.reason}`, date: l.createdAt, status: l.status }));
+    recentHistoryRaw[1].forEach((p: any) => history.push({ type: "payment", title: `ส่งเงิน: ฿${p.amount}`, date: p.createdAt, status: p.status }));
+    recentHistoryRaw[2].forEach((r: any) => history.push({ type: "requisition", title: `เบิก: ${r.itemName}`, date: r.createdAt, status: r.status }));
 
-    history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    history.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
     history = history.slice(0, 5);
 
     return NextResponse.json({

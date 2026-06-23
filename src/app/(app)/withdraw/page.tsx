@@ -71,12 +71,12 @@ export default function WithdrawPage() {
     refresh();
   };
 
-  const total = payments.filter(p => p.status === "confirmed").reduce((acc, p) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
-  const totalIn = payments.filter(p => p.type === "income" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
-  const totalOut = payments.filter(p => p.type === "expense" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
+  const total = payments.filter((p: any) => p.status === "confirmed").reduce((acc, p) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
+  const totalIn = payments.filter((p: any) => p.type === "income" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
+  const totalOut = payments.filter((p: any) => p.type === "expense" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
 
-  const displayPayments = payments.filter(p => p.type === "expense");
-  const managerMembers = members.filter(m => m.role === "leader" || m.role === "vice_leader");
+  const displayPayments = payments.filter((p: any) => p.type === "expense");
+  const managerMembers = members.filter((m: any) => m.role === "leader" || m.role === "vice_leader");
 
   if (!isManager && !loading) {
     return (
@@ -156,7 +156,7 @@ export default function WithdrawPage() {
               <select className="sog-input" value={form.memberName} onChange={e => setForm(f => ({ ...f, memberName: e.target.value }))} required style={{ height: "46px" }}>
                 <option value="">— เลือกผู้ถอน (เฉพาะทีมบริหาร) —</option>
                 <option value={user?.icName || user?.name || ""}>👤 ตัวคุณเอง ({user?.icName || user?.name})</option>
-                {managerMembers.filter(m => m.name !== (user?.icName || user?.name)).map(m => (
+                {managerMembers.filter((m: any) => m.name !== (user?.icName || user?.name)).map((m: any) => (
                   <option key={m.id} value={m.name}>{m.name}</option>
                 ))}
               </select>
@@ -210,7 +210,7 @@ export default function WithdrawPage() {
                   <Wallet size={32} color="#475569" style={{ margin: "0 auto 12px" }} />
                   <p style={{ color: "#64748b", margin: 0 }}>ยังไม่มีรายการถอนเงิน</p>
                 </div>
-              ) : displayPayments.map((p, i) => (
+              ) : displayPayments.map((p: any, i: any) => (
                 <motion.div
                   key={p._id}
                   initial={{ opacity: 0, x: 20 }}

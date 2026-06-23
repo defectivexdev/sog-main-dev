@@ -22,7 +22,7 @@ export async function GET() {
     // Convert to CSV
     const headers = ["วันที่", "ประเภท", "ผู้ทำรายการ", "จำนวนเงิน", "สถานะ", "ผู้อนุมัติ", "หมายเหตุ"];
     
-    const rows = payments.map(p => {
+    const rows = payments.map((p: any) => {
       const typeText = p.type === "income" ? "นำส่งเข้าคลัง" : "เบิกจากคลัง";
       const statusText = p.status === "confirmed" ? "อนุมัติแล้ว" : p.status === "rejected" ? "ปฏิเสธ" : "รอตรวจสอบ";
       const dateText = new Date(p.date).toLocaleDateString("th-TH", { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -35,7 +35,7 @@ export async function GET() {
         statusText,
         p.confirmedBy || "-",
         (p.description || "-").replace(/"/g, '""') // Escape quotes for CSV
-      ].map(field => `"${field}"`).join(","); // Wrap fields in quotes
+      ].map((field: any) => `"${field}"`).join(","); // Wrap fields in quotes
     });
 
     // Add BOM for Excel UTF-8 compatibility

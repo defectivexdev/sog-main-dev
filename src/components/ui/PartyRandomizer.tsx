@@ -95,7 +95,7 @@ export default function PartyRandomizer({ isManager, members }: PartyRandomizerP
                   onChange={(e) => setQuickName(e.target.value)}
                 >
                   <option value="">— เลือกสมาชิกเพื่อเข้ากองสุ่ม —</option>
-                  {members.map(m => (
+                  {members.map((m: any) => (
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
@@ -229,7 +229,7 @@ export default function PartyRandomizer({ isManager, members }: PartyRandomizerP
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "250px", overflowY: "auto", paddingRight: "4px" }}>
                       <AnimatePresence>
-                        {quickTeams.map((team, i) => (
+                        {quickTeams.map((team: any, i: any) => (
                           <motion.div
                             key={i}
                             initial={{ opacity: 0, x: 20 }}

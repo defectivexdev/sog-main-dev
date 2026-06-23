@@ -95,9 +95,9 @@ export default function LeavePage() {
     setTimeout(() => setMsg(""), 4000);
   };
 
-  const myHistory = records.filter(r => r.memberName === (session?.user?.icName || session?.user?.name));
-  const pendingRequests = records.filter(r => r.status === "pending");
-  const filteredHistory = records.filter(r => r.memberName.toLowerCase().includes(searchQuery.toLowerCase()));
+  const myHistory = records.filter((r: any) => r.memberName === (session?.user?.icName || session?.user?.name));
+  const pendingRequests = records.filter((r: any) => r.status === "pending");
+  const filteredHistory = records.filter((r: any) => r.memberName.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -251,7 +251,7 @@ export default function LeavePage() {
                    <p style={{ fontSize: "0.85rem", marginTop: "8px" }}>คุณจัดการคำร้องครบหมดแล้ว เก่งมาก!</p>
                  </div>
                ) : (
-                pendingRequests.map(r => {
+                pendingRequests.map((r: any) => {
                   const startDate = new Date(r.startDate).toLocaleDateString("th-TH", { day: '2-digit', month: 'short', year: 'numeric' });
                   const endDate = new Date(r.endDate).toLocaleDateString("th-TH", { day: '2-digit', month: 'short', year: 'numeric' });
                   const diffTime = Math.abs(new Date(r.endDate).getTime() - new Date(r.startDate).getTime());

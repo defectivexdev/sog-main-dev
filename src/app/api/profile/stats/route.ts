@@ -38,7 +38,7 @@ export async function GET() {
     });
 
     let totalLeaveDays = 0;
-    leaves.forEach(leave => {
+    leaves.forEach((leave: any) => {
       const diffTime = Math.abs(new Date(leave.endDate).getTime() - new Date(leave.startDate).getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
       totalLeaveDays += diffDays;

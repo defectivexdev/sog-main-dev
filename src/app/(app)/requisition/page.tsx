@@ -102,8 +102,8 @@ export default function RequisitionPage() {
     setTimeout(() => setMsg(""), 4000);
   };
 
-  const pendingRequests = records.filter(r => r.status === "pending" || r.status === "approved"); // Mangers see pending & approved (to mark delivered)
-  const filteredHistory = records.filter(r => r.memberName.toLowerCase().includes(searchQuery.toLowerCase()) || r.itemName.toLowerCase().includes(searchQuery.toLowerCase()));
+  const pendingRequests = records.filter((r: any) => r.status === "pending" || r.status === "approved"); // Mangers see pending & approved (to mark delivered)
+  const filteredHistory = records.filter((r: any) => r.memberName.toLowerCase().includes(searchQuery.toLowerCase()) || r.itemName.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -200,7 +200,7 @@ export default function RequisitionPage() {
 
             {loading ? <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>กำลังโหลดข้อมูล...</div> : (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {filteredHistory.length === 0 ? <div style={{ textAlign: "center", color: "#64748b", padding: "32px" }}>ยังไม่มีประวัติการเบิกของ</div> : filteredHistory.map((r, i) => (
+                {filteredHistory.length === 0 ? <div style={{ textAlign: "center", color: "#64748b", padding: "32px" }}>ยังไม่มีประวัติการเบิกของ</div> : filteredHistory.map((r: any, i: any) => (
                   <motion.div key={r.id || i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: "16px", background: "rgba(15,22,41,0.5)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "16px", alignItems: "flex-start" }}>
                     {r.imageUrl ? (
                       <Image src={r.imageUrl} alt={r.itemName} width={64} height={64} style={{ borderRadius: "8px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.1)" }} />
@@ -248,7 +248,7 @@ export default function RequisitionPage() {
                    <p style={{ fontSize: "1.1rem", fontWeight: 600 }}>ไม่มีคำร้องที่รอดำเนินการ</p>
                  </div>
                ) : (
-                pendingRequests.map(r => (
+                pendingRequests.map((r: any) => (
                   <motion.div key={r.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ padding: "20px", borderLeft: r.status === "pending" ? "4px solid #fbbf24" : "4px solid #34d399", display: "flex", flexDirection: "column" }}>
                     
                     <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>

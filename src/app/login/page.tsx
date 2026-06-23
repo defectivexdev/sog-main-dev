@@ -43,7 +43,7 @@ export default function LoginPage() {
       />
 
       {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
+      {[...Array(6)].map((_: any, i: any) => (
         <div
           key={i}
           style={{

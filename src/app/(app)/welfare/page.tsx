@@ -98,7 +98,7 @@ export default function WelfarePage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "16px" }}>
           {items.length === 0 ? (
             <EmptyState title="ยังไม่มีสวัสดิการ" description="กดปุ่ม + เพิ่มรายการ เพื่อสร้างสวัสดิการแรกของแก๊งค์" icon={<Pill size={32} />} />
-          ) : items.map(item => (
+          ) : items.map((item: any) => (
             <div key={item._id} className="stat-card" style={{ padding: "16px" }}>
               <div style={{ height: "80px", background: "rgba(201,162,39,0.06)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", marginBottom: "12px" }}>💊</div>
               <p style={{ color: "#e2e8f0", fontWeight: 700, margin: "0 0 2px" }}>{item.name}</p>
@@ -134,7 +134,7 @@ export default function WelfarePage() {
                 <label style={{ color: "#e2e8f0", fontSize: "0.85rem", display: "block", marginBottom: "6px" }}>เลือกสมาชิก</label>
                 <select className="sog-input" value={assignForm.memberName} onChange={e => setAssignForm(f => ({ ...f, memberName: e.target.value }))} required>
                   <option value="" disabled>-- เลือกสมาชิก --</option>
-                  {members.map(m => (
+                  {members.map((m: any) => (
                     <option key={m.id} value={m.name}>{m.icName || m.name} (@{m.name})</option>
                   ))}
                 </select>

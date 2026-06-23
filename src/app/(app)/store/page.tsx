@@ -64,7 +64,7 @@ export default function StorePage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "16px" }}>
           {items.length === 0 ? (
             <EmptyState title="ยังไม่มีรูปภาพ" description="กดปุ่ม + เพิ่มรูปภาพ เพื่ออัปโหลดรูปแรกของแกลลอรี่" icon={<ImageIcon size={32} />} />
-          ) : items.map(item => (
+          ) : items.map((item: any) => (
             <div key={item._id || item.id} className="stat-card" style={{ padding: "16px" }}>
               {item.image ? (
                 <Image src={item.image} alt="Uploaded Image" width={230} height={230} style={{ width: "100%", height: "200px", objectFit: "cover", borderRadius: "8px", marginBottom: "12px", background: "rgba(0,0,0,0.2)" }} />

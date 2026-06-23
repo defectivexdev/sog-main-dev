@@ -200,7 +200,7 @@ export default function ManagementPage() {
                     style={{ padding: "6px 12px", fontSize: "0.85rem" }}
                   >
                     <option value="">-- ไม่ระบุ --</option>
-                    {members.map(m => (
+                    {members.map((m: any) => (
                       <option key={m.id} value={m.id}>{m.icName || m.name}</option>
                     ))}
                   </select>
@@ -242,7 +242,7 @@ export default function ManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {members.map(member => (
+                {members.map((member: any) => (
                   <tr key={member.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <td style={{ padding: "12px 8px", color: "#e2e8f0", fontWeight: 600 }}>{member.icName || "-"}</td>
                     <td style={{ padding: "12px 8px", color: "#94a3b8", fontSize: "0.85rem" }}>{member.name}</td>

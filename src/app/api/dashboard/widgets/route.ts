@@ -39,7 +39,7 @@ export async function GET() {
       }
     });
 
-    const chartData = Object.keys(groupedData).map(label => ({
+    const chartData = Object.keys(groupedData).map((label: any) => ({
       name: label,
       income: groupedData[label]
     }));

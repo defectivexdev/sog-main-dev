@@ -78,8 +78,8 @@ export default function AirdropCheckPage() {
     setTimeout(() => setMsg(""), 3000);
   };
 
-  const openSessions = sessions.filter(s => s.status === "open");
-  const closedSessions = sessions.filter(s => s.status === "closed");
+  const openSessions = sessions.filter((s: any) => s.status === "open");
+  const closedSessions = sessions.filter((s: any) => s.status === "closed");
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -123,7 +123,7 @@ export default function AirdropCheckPage() {
               <div>
                 <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>เลือกรอบเวลา</label>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  {TIME_SLOTS.map(slot => (
+                  {TIME_SLOTS.map((slot: any) => (
                     <motion.button
                       key={slot}
                       whileHover={{ scale: 1.05 }}
@@ -168,7 +168,7 @@ export default function AirdropCheckPage() {
               <Gift size={32} style={{ margin: "0 auto 12px", opacity: 0.5 }} />
               <p style={{ margin: 0 }}>ไม่มีรอบแอร์ดรอปที่เปิดอยู่</p>
             </div>
-          ) : openSessions.map(s => (
+          ) : openSessions.map((s: any) => (
             <motion.div key={s.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: "24px", marginBottom: "16px", borderLeft: "4px solid #34d399" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
                 <div>
@@ -194,7 +194,7 @@ export default function AirdropCheckPage() {
                     <PackageOpen size={16} /> รายการของรางวัล (Loot)
                   </p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
-                    {s.items.map((item, idx) => (
+                    {s.items.map((item: any, idx: any) => (
                       <div key={idx} style={{ display: "flex", alignItems: "center", gap: "10px", background: "rgba(15,22,41,0.6)", padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.05)" }}>
                         {item.imageUrl ? (
                           <Image src={item.imageUrl} alt={item.name} width={40} height={40} style={{ borderRadius: "6px", objectFit: "cover", border: "1px solid rgba(201,162,39,0.2)" }} />
@@ -226,7 +226,7 @@ export default function AirdropCheckPage() {
                         style={{ height: "46px" }}
                       >
                         <option value="">— เลือกสมาชิก (IC Name) —</option>
-                        {members.filter(m => !s.checkedMembers.includes(m.name)).map(m => (
+                        {members.filter((m: any) => !s.checkedMembers.includes(m.name)).map((m: any) => (
                           <option key={m.id} value={m.name}>{m.name}</option>
                         ))}
                       </select>
@@ -265,7 +265,7 @@ export default function AirdropCheckPage() {
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     <AnimatePresence>
-                      {s.checkedMembers.map(m => (
+                      {s.checkedMembers.map((m: any) => (
                         <motion.span
                           key={m}
                           initial={{ opacity: 0, scale: 0.8 }}
@@ -300,7 +300,7 @@ export default function AirdropCheckPage() {
                 <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#64748b" }} />
                 รอบที่ปิดแล้ว
               </h2>
-              {closedSessions.map(s => (
+              {closedSessions.map((s: any) => (
                 <div key={s.id} className="glass-card" style={{ padding: "16px 24px", marginBottom: "10px", opacity: 0.6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -315,7 +315,7 @@ export default function AirdropCheckPage() {
 
                   {s.items && s.items.length > 0 && (
                     <div style={{ marginTop: "12px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "12px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                      {s.items.map((item, idx) => (
+                      {s.items.map((item: any, idx: any) => (
                         <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(0,0,0,0.2)", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}>
                           {item.imageUrl && (
                             <Image src={item.imageUrl} alt={item.name} width={20} height={20} style={{ borderRadius: "4px", objectFit: "cover" }} />

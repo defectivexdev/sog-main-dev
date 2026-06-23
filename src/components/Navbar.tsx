@@ -243,7 +243,7 @@ export default function Navbar() {
 
         {/* ——— Navigation Sections ——— */}
         <nav style={{ flex: 1, padding: "4px 10px", overflowY: "auto" }}>
-          {navSections.map((section, sIdx) => {
+          {navSections.map((section: any, sIdx: any) => {
             const isCollapsed = collapsed[section.title];
             return (
               <div key={section.title} style={{ marginBottom: "2px" }}>
@@ -296,7 +296,7 @@ export default function Navbar() {
                       transition={{ duration: 0.2, ease: "easeInOut" }}
                       style={{ overflow: "hidden" }}
                     >
-                      {section.items.map((item, i) => {
+                      {section.items.map((item: any, i: any) => {
                         if (item.managerOnly && !isManager) return null;
                         const isActive =
                           pathname === item.href ||

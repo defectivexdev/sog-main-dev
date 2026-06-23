@@ -60,7 +60,7 @@ export default async function DashboardPage() {
     }
   });
 
-  const chartData = Object.keys(chartDataMap).map(date => ({
+  const chartData = Object.keys(chartDataMap).map((date: any) => ({
     date,
     income: chartDataMap[date].income,
     expense: chartDataMap[date].expense
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
   }));
 
   // Sort combined activities by time desc and take top 5
-  activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  activities.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   activities = activities.slice(0, 5);
 
   // Static configs
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px", marginBottom: "16px" }}>
-        {stats.map((stat, i) => (
+        {stats.map((stat: any, i: any) => (
           <StatCard key={stat.label} label={stat.label} value={stat.value} icon={stat.icon} color={stat.color} delay={i * 0.05} />
         ))}
       </div>

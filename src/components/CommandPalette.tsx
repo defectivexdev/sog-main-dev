@@ -196,7 +196,7 @@ export default function CommandPalette() {
                 </div>
               ) : (
                 <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-                  {filteredItems.map((item, idx) => {
+                  {filteredItems.map((item: any, idx: any) => {
                     const isSelected = idx === selectedIndex;
                     return (
                       <li key={item.id}>
