@@ -31,7 +31,7 @@ export async function GET() {
       groupedData[label] = 0;
     }
 
-    payments.forEach(p => {
+    payments.forEach((p: any) => {
       const d = new Date(p.date);
       const label = d.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
       if (groupedData[label] !== undefined) {
@@ -59,21 +59,21 @@ export async function GET() {
     });
 
     const timeline = [
-      ...recentPayments.map(p => ({
+      ...recentPayments.map((p: any) => ({
         id: `pay-${p.id}`,
         type: p.type === "income" ? "PAYMENT_IN" : "PAYMENT_OUT",
         user: p.memberName,
         desc: p.type === "income" ? `ส่งเงินเข้าคลัง ฿${p.amount}` : `ถอนเงิน ฿${p.amount}`,
         date: p.createdAt
       })),
-      ...recentLeaves.map(l => ({
+      ...recentLeaves.map((l: any) => ({
         id: `leave-${l.id}`,
         type: "LEAVE",
         user: l.memberName,
         desc: l.status === "approved" ? "ลางาน (อนุมัติแล้ว)" : "ขอแจ้งลางาน",
         date: l.createdAt
       }))
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+    ].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
     // 3. Top Donators (Last 7 Days)
     const topDonatorsRaw = await prisma.payment.groupBy({
@@ -83,7 +83,7 @@ export async function GET() {
       orderBy: { _sum: { amount: 'desc' } },
       take: 3
     });
-    const topDonators = topDonatorsRaw.map(t => ({ name: t.memberName, amount: t._sum.amount || 0 }));
+    const topDonators = topDonatorsRaw.map((t: any) => ({ name: t.memberName, amount: t._sum.amount || 0 }));
 
     // 4. Server Time (Next Airdrop/Activity)
     const upcomingActivity = await prisma.activity.findFirst({
