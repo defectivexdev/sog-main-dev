@@ -99,7 +99,7 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
   });
 
   // Sort: unpaid first, then paid
-  memberStats.sort((a, b) => Number(a.isPaid) - Number(b.isPaid));
+  memberStats.sort((a: any, b: any) => Number(a.isPaid) - Number(b.isPaid));
 
   // Cannot use framer-motion directly in Server Components as it needs 'use client'.
   // Oh wait, /house/page.tsx is a Server Component. I cannot use `framer-motion` `<motion.div>` directly unless I create a client wrapper.
