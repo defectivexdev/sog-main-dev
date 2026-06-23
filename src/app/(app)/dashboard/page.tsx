@@ -235,7 +235,7 @@ export default async function DashboardPage() {
               {topEarners.length === 0 ? (
                 <div style={{ color: "#64748b", textAlign: "center", padding: "20px 0", fontSize: "0.85rem" }}>ไม่มีข้อมูลรายรับ</div>
               ) : (
-                topEarners.map((earner, idx) => (
+                topEarners.map((earner: any, idx: number) => (
                   <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(15,22,41,0.5)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(201,162,39,0.1)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: idx === 0 ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", color: idx === 0 ? "#c9a227" : "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "0.9rem" }}>
@@ -259,7 +259,7 @@ export default async function DashboardPage() {
               {upcomingActivitiesList.length === 0 ? (
                 <div style={{ color: "#64748b", textAlign: "center", padding: "20px 0", fontSize: "0.85rem" }}>ไม่มีกิจกรรมที่กำลังจะมาถึง</div>
               ) : (
-                upcomingActivitiesList.map((act, idx) => (
+                upcomingActivitiesList.map((act: any, idx: number) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "6px", background: "rgba(236,72,153,0.05)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(236,72,153,0.15)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "0.9rem" }}>{act.name}</span>
@@ -295,7 +295,7 @@ export default async function DashboardPage() {
                 <div style={{ marginTop: "4px" }}>
                   <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "8px" }}>รายชื่อคนลา:</p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {activeLeaves.map((l, idx) => (
+                    {activeLeaves.map((l: any, idx: number) => (
                       <span key={idx} style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "4px 8px", borderRadius: "6px", fontSize: "0.75rem", border: "1px solid rgba(248,113,113,0.2)" }}>
                         {l.memberName}
                       </span>
@@ -315,7 +315,7 @@ export default async function DashboardPage() {
               {airdropLoot.length === 0 ? (
                 <div style={{ color: "#64748b", textAlign: "center", padding: "20px 0", fontSize: "0.85rem" }}>ยังไม่มีข้อมูลแอร์ดรอป/ลูป</div>
               ) : (
-                airdropLoot.map((drop, idx) => (
+                airdropLoot.map((drop: any, idx: number) => (
                   <div key={idx} style={{ marginBottom: "8px" }}>
                     <p style={{ color: "#f59e0b", fontSize: "0.85rem", fontWeight: 600, margin: "0 0 8px" }}>{drop.sessionName}</p>
                     <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
