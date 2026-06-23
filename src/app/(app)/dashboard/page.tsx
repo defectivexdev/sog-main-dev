@@ -140,7 +140,7 @@ export default async function DashboardPage() {
     status: r.status
   }));
 
-  recentPays.forEach(p => activities.push({
+  recentPays.forEach((p: any) => activities.push({
     id: `pay-${p.id}`,
     type: p.type === "income" ? "payment_income" : "payment_expense",
     title: p.type === "income" ? "ส่งเงินเข้าคลัง" : "เบิกเงิน",
