@@ -14,7 +14,8 @@ export default function ManagementPage() {
   const { data: memRes, mutate: refreshMembers } = useSWR('/api/members', fetcher);
   
   const loading = !setRes && !houseRes && !memRes;
-  const houses = houseRes || [];
+  const houseData = houseRes?.data || houseRes || [];
+  const houses = Array.isArray(houseData) ? houseData : [];
   
   const memData = memRes?.data || memRes || [];
   const members = Array.isArray(memData) ? memData.filter((m: any) => m.status === "active") : [];
