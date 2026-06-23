@@ -30,7 +30,8 @@ export default function AuditPage() {
     );
   }
 
-  const logs: AuditLog[] = data?.logs || [];
+  const logsRaw = data?.logs || data?.data || [];
+  const logs: AuditLog[] = Array.isArray(logsRaw) ? logsRaw : [];
 
   const getActionColor = (action: string) => {
     if (action.includes("APPROVE") || action.includes("INCOME")) return "#34d399";

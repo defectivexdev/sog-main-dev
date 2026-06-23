@@ -14,7 +14,12 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function LeaderboardPage() {
   const { data: fetchRes, isLoading } = useSWR('/api/leaderboard', fetcher);
-  const data = fetchRes?.data || { topAttendance: [], topDonators: [], topActivity: [] };
+  const rawData = fetchRes?.data || fetchRes || {};
+  const data = {
+    topAttendance: Array.isArray(rawData.topAttendance) ? rawData.topAttendance : [],
+    topDonators: Array.isArray(rawData.topDonators) ? rawData.topDonators : [],
+    topActivity: Array.isArray(rawData.topActivity) ? rawData.topActivity : [],
+  };
 
   const getRankColor = (index: number) => {
     if (index === 0) return "#fbbf24"; // Gold

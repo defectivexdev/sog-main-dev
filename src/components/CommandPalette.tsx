@@ -43,7 +43,7 @@ export default function CommandPalette() {
       fetch("/api/members")
         .then(res => res.json())
         .then(data => {
-          if (data && data.data) {
+          if (data && Array.isArray(data.data)) {
             const mapped = data.data.map((m: any) => ({
               id: `member-${m.id}`,
               name: m.icName || m.name,

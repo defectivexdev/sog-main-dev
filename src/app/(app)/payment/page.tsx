@@ -15,8 +15,12 @@ export default function PaymentPage() {
   const { data: payData, mutate: refreshPayments, isLoading: payLoading } = useSWR('/api/payment', fetcher);
   const { data: memData, isLoading: memLoading } = useSWR('/api/members', fetcher);
   
-  const payments = payData?.data || [];
-  const members = (memData?.data || []).map((m: any) => ({ id: m.id, name: m.icName || m.name }));
+  const rawPayments = payData?.data || payData || [];
+  const payments = Array.isArray(rawPayments) ? rawPayments : [];
+  
+  const rawMembers = memData?.data || memData || [];
+  const membersList = Array.isArray(rawMembers) ? rawMembers : [];
+  const members = membersList.map((m: any) => ({ id: m.id, name: m.icName || m.name }));
   const loading = payLoading || memLoading;
   
   const [form, setForm] = useState({ memberName: "", amount: 0, image: "", date: new Date().toISOString().split("T")[0] });
