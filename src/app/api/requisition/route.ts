@@ -1,0 +1,76 @@
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { resolveGangRole, isManager } from "@/lib/roles";
+
+export async function GET() {
+  const data = await prisma.requisition.findMany({ orderBy: { createdAt: 'desc' } });
+  return NextResponse.json({ data });
+}
+
+export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const req_ = await prisma.requisition.create({ 
+    data: {
+      memberName: body.memberName,
+      itemName: body.itemName,
+      quantity: body.quantity,
+      unit: body.unit,
+      reason: body.reason,
+      imageUrl: body.imageUrl,
+    } 
+  });
+  return NextResponse.json({ data: req_ }, { status: 201 });
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
+  if (!isManager(role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id, ...update } = await req.json();
+  const actorName = session.user.icName || session.user.name;
+  const rec = await prisma.requisition.update({ where: { id: id }, data: { ...update, approvedBy: actorName } });
+
+  // Record Audit Log
+  if (prisma.auditLog && (update.status === "approved" || update.status === "rejected")) {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          action: update.status === "approved" ? "APPROVE_REQUISITION" : "REJECT_REQUISITION",
+          details: `${actorName} ${update.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"} การเบิก ${rec.itemName} จำนวน ${rec.quantity} ${rec.unit} ของ ${rec.memberName}`,
+          actorName: actorName,
+          actorRole: role,
+          targetId: rec.id
+        }
+      });
+    } catch (e) {
+      console.error("Failed to create audit log", e);
+    }
+  }
+
+  // Create Notification if approved/rejected
+  if (update.status === "approved" || update.status === "rejected") {
+    const member = await prisma.member.findFirst({
+      where: { OR: [{ name: rec.memberName }, { icName: rec.memberName }] }
+    });
+    if (member && member.discordId) {
+      await prisma.notification.create({
+        data: {
+          userId: member.discordId,
+          title: update.status === "approved" ? "✅ อนุมัติการเบิกของ" : "❌ ปฏิเสธการเบิกของ",
+          message: update.status === "approved" 
+            ? `คำขอเบิก ${rec.itemName} จำนวน ${rec.quantity} ${rec.unit} ได้รับการอนุมัติแล้ว`
+            : `คำขอเบิก ${rec.itemName} ถูกปฏิเสธ ${rec.rejectReason ? `(เหตุผล: ${rec.rejectReason})` : ''}`,
+          type: "requisition"
+        }
+      });
+    }
+  }
+
+  return NextResponse.json({ data: rec });
+}

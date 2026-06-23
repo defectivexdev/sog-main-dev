@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  discordId String?  @unique
+  name      String
+  icName    String?
+  nickname  String?
+  role      String   @default("member")
+  avatar    String?
+  phone     String?
+  lineId    String?
+  joinDate  DateTime @default(now())
+  status    String   @default("active")
+  houseId   String?
+  house     House?   @relation(fields: [houseId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([discordId])
+}
+
+model House {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  headId      String?  // Member ID of the House Head
+  members     Member[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Settings {
+  id              String   @id @default("global")
+  weeklyTaxAmount Float    @default(0)
+  bankAccountNo   String?
+  bankAccountName String?
+  webhookPayment  String?
+  webhookLeave    String?
+  webhookAirdrop  String?
+  updatedAt       DateTime @updatedAt
+}
+
+model Activity {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  date            DateTime
+  location        String?
+  participants    String[] // Array of member names or IC names
+  maxParticipants Int?
+  status          String   @default("upcoming")
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([date])
+}
+
+model Airdrop {
+  id             String   @id @default(cuid())
+  sessionName    String
+  date           DateTime
+  items          Json     // Storing IAirdropItem[] as JSON
+  checkedMembers String[] // Array of member names or IC names
+  status         String   @default("open")
+  createdBy      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  memberId   String
+  memberName String
+  date       DateTime
+  status     String
+  note       String?
+  recordedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([date])
+}
+
+model Leave {
+  id           String   @id @default(cuid())
+  memberName   String
+  startDate    DateTime
+  endDate      DateTime
+  reason       String
+  status       String   @default("pending")
+  rejectReason String?
+  requestDate  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  memberName  String
+  amount      Float
+  type        String   @default("income")
+  description String?
+  image       String?
+  date        DateTime @default(now())
+  status      String   @default("pending")
+  confirmedBy String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+  @@index([type])
+  @@index([memberName])
+}
+
+model Requisition {
+  id           String   @id @default(cuid())
+  memberName   String
+  itemName     String
+  quantity     Int
+  unit         String   @default("ชิ้น")
+  reason       String
+  imageUrl     String?
+  status       String   @default("pending")
+  rejectReason String?
+  requestDate  DateTime @default(now())
+  approvedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+}
+
+model StoreItem {
+  id          String   @id @default(cuid())
+  name        String?
+  description String?
+  price       Float?
+  image       String?
+  stock       Int      @default(0)
+  status      String   @default("available")
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WelfareItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  quantity    Int      @default(0)
+  image       String?
+  status      String   @default("available")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  author    String
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // Discord ID of the member
+  title     String
+  message   String
+  type      String   // e.g. "payment", "leave", "announcement"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   String
+  actorName String
+  actorRole String
+  targetId  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@index([actorName])
+}
