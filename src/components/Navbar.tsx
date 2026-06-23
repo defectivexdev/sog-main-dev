@@ -30,7 +30,7 @@ import {
 import { useRole } from "@/hooks/useRole";
 
 const LOGO_URL =
-  "https://cdn.discordapp.com/attachments/1442213274492997693/1517461986403942470/D5DC735D-0A70-4597-9245-C3B3C5CD5D24.png?ex=6a39a9da&is=6a38585a&hm=a62cf0ade0085c4c2c8cb1ef36cff07c46cc5a7d02b9a1ffd0d2462bd6e160fc&";
+  "/sog-logo.png";
 
 interface NavSection {
   title: string;
