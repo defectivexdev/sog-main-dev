@@ -70,7 +70,7 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
   startOfWeek.setHours(0, 0, 0, 0);
 
   // Fetch all confirmed income payments for members in this house THIS WEEK
-  const memberIds = house.members.map(m => m.icName || m.name);
+  const memberIds = house.members.map((m: any) => m.icName || m.name);
   
   // Note: Payments store memberName, not ID (based on existing schema usage).
   // We need to map them carefully.
@@ -86,11 +86,11 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
   });
 
   const paymentMap = new Map();
-  payments.forEach(p => {
+  payments.forEach((p: any) => {
     paymentMap.set(p.memberName, p._sum.amount || 0);
   });
 
-  const memberStats = house.members.map(m => {
+  const memberStats = house.members.map((m: any) => {
     const nameToMatch = m.icName || m.name;
     const paid = paymentMap.get(nameToMatch) || 0;
     const isPaid = paid >= taxRequired;
@@ -127,7 +127,7 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
               style={{ width: "200px", padding: "8px 12px" }}
               onChange={(e) => e.target.form?.submit()}
             >
-              {allHouses.map(h => (
+              {allHouses.map((h: any) => (
                 <option key={h.id} value={h.id}>{h.name}</option>
               ))}
             </select>
@@ -141,7 +141,7 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
         </h2>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-          {memberStats.map(m => (
+          {memberStats.map((m: any) => (
             <div 
               key={m.id} 
               className="hover-card-effect"
