@@ -13,6 +13,13 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     const { id } = await props.params;
     const { name, headId } = await req.json();
 
+    if (name) {
+      const allowedNames = ["บ้าน1", "บ้าน2", "บ้าน3", "บ้าน4", "บ้าน5"];
+      if (!allowedNames.includes(name)) {
+        return NextResponse.json({ success: false, error: "ไม่อนุญาตให้ใช้ชื่อนี้ (อนุญาตเฉพาะ บ้าน1 - บ้าน5 เท่านั้น)" }, { status: 400 });
+      }
+    }
+
     const house = await prisma.house.update({
       where: { id },
       data: { name, headId }

@@ -36,7 +36,7 @@ export default function ManagementPage() {
     }
   }, [setRes, editSettings]);
   
-  const [newHouseName, setNewHouseName] = useState("");
+  const [newHouseName, setNewHouseName] = useState("บ้าน1");
 
   const fetchData = () => {
     refreshSettings();
@@ -69,7 +69,7 @@ export default function ManagementPage() {
       });
       if (res.ok) {
         toast.success("สร้างบ้านสำเร็จ!");
-        setNewHouseName("");
+        setNewHouseName("บ้าน1");
         fetchData();
       } else toast.error("เกิดข้อผิดพลาด");
     } catch (err) {
@@ -157,13 +157,16 @@ export default function ManagementPage() {
           </h2>
           
           <form onSubmit={createHouse} style={{ display: "flex", gap: "12px", marginBottom: "24px", maxWidth: "400px" }}>
-            <input 
-              type="text" 
+            <select 
               className="sog-input" 
-              placeholder="ชื่อบ้านใหม่..." 
               value={newHouseName}
               onChange={e => setNewHouseName(e.target.value)}
-            />
+              style={{ padding: "8px 12px" }}
+            >
+              {["บ้าน1", "บ้าน2", "บ้าน3", "บ้าน4", "บ้าน5"].map(name => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
