@@ -19,10 +19,8 @@ export async function GET(req: Request) {
       data: { houseId: null }
     });
 
-    // 2. Remove all house heads (but keep the houses intact)
-    await prisma.house.updateMany({
-      data: { headId: null }
-    });
+    // 2. Delete all houses completely
+    await prisma.house.deleteMany({});
 
     return NextResponse.json({ success: true, message: "Houses have been reset successfully" });
   } catch (error: any) {
