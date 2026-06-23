@@ -11,7 +11,7 @@ export async function GET() {
       take: 10
     });
 
-    const topAttendance = attendances.map(a => ({
+    const topAttendance = attendances.map((a: any) => ({
       name: a.memberName,
       score: a._count.memberName
     }));
@@ -25,7 +25,7 @@ export async function GET() {
       take: 10
     });
 
-    const topDonators = payments.map(p => ({
+    const topDonators = payments.map((p: any) => ({
       name: p.memberName,
       score: p._sum.amount || 0
     }));
@@ -38,15 +38,15 @@ export async function GET() {
     });
 
     const activityCounts: Record<string, number> = {};
-    activities.forEach(act => {
-      act.participants.forEach(p => {
+    activities.forEach((act: any) => {
+      act.participants.forEach((p: any) => {
         activityCounts[p] = (activityCounts[p] || 0) + 1;
       });
     });
 
     const topActivity = Object.entries(activityCounts)
       .map(([name, score]) => ({ name, score }))
-      .sort((a, b) => b.score - a.score)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 10);
 
     return NextResponse.json({
