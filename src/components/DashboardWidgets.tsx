@@ -55,7 +55,7 @@ export default function DashboardWidgets() {
               <Tooltip 
                 contentStyle={{ background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(201, 162, 39, 0.2)", borderRadius: "8px", color: "#fff" }}
                 itemStyle={{ color: "#c9a227", fontWeight: "bold" }}
-                formatter={(value: number) => [`฿${value.toLocaleString()}`, "รายได้"]}
+                formatter={(value: any) => [`฿${Number(value).toLocaleString()}`, "รายได้"]}
               />
               <Area type="monotone" dataKey="income" stroke="#c9a227" strokeWidth={3} fillOpacity={1} fill="url(#colorIncome)" />
             </AreaChart>

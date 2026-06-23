@@ -6,7 +6,7 @@ import { isManager } from "@/lib/roles";
 export async function PUT(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !isManager(session.user.gangRole)) {
+    if (!session || !isManager(session.user.gangRole as any)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

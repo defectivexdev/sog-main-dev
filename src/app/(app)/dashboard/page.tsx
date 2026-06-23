@@ -113,16 +113,16 @@ export default async function DashboardPage() {
     })
   ]);
 
-  const topEarners = topEarnersRaw.map(e => ({ name: e.memberName, amount: e._sum.amount || 0 }));
-  const airdropLoot = recentAirdrops.map(a => ({
+  const topEarners = topEarnersRaw.map((e: any) => ({ name: e.memberName, amount: e._sum.amount || 0 }));
+  const airdropLoot = recentAirdrops.map((a: any) => ({
     sessionName: a.sessionName,
     date: a.date,
     items: a.items as any[]
-  })).filter(a => a.items && a.items.length > 0);
+  })).filter((a: any) => a.items && a.items.length > 0);
 
-  let activities: ActivityItem[] = [];
+  let activities: any[] = [];
   
-  recentLeaves.forEach(l => activities.push({
+  recentLeaves.forEach((l: any) => activities.push({
     id: `leave-${l.id}`,
     type: "leave",
     title: `แจ้งลา: ${l.reason}`,
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
     status: l.status
   }));
 
-  recentReqs.forEach(r => activities.push({
+  recentReqs.forEach((r: any) => activities.push({
     id: `req-${r.id}`,
     type: "requisition",
     title: `เบิก: ${r.itemName} (${r.quantity}${r.unit || 'ชิ้น'})`,

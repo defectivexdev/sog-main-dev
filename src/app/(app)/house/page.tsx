@@ -10,7 +10,7 @@ export default async function HouseDashboardPage({ searchParams }: { searchParam
   if (!session) redirect("/login");
 
   const me = await prisma.member.findUnique({ where: { discordId: session.user.discordId } });
-  const manager = isManager(session.user.gangRole);
+  const manager = isManager(session.user.gangRole as any);
 
   const { houseId: qHouseId } = await searchParams;
 

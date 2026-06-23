@@ -106,7 +106,7 @@ export async function PATCH(req: NextRequest) {
           data: {
             action: update.status === "approved" ? "APPROVE_LEAVE" : "REJECT_LEAVE",
             details: `${actorName} ${update.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"} การลางานของ ${leave.memberName}`,
-            actorName: actorName,
+            actorName: actorName || "Unknown",
             actorRole: resolveGangRole(session.user.discordId, session.user.discordRoles),
             targetId: leave.id
           }

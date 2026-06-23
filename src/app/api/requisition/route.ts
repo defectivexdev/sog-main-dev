@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest) {
         data: {
           action: update.status === "approved" ? "APPROVE_REQUISITION" : "REJECT_REQUISITION",
           details: `${actorName} ${update.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"} การเบิก ${rec.itemName} จำนวน ${rec.quantity} ${rec.unit} ของ ${rec.memberName}`,
-          actorName: actorName,
+          actorName: actorName || "Unknown",
           actorRole: role,
           targetId: rec.id
         }

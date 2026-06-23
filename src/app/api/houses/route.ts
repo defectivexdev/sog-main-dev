@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session || !isManager(session.user.gangRole)) {
+    if (!session || !isManager(session.user.gangRole as any)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRole } from "@/hooks/useRole";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, ArrowUpRight, ArrowDownRight, User, Image as ImageIcon, Calendar, CheckCircle2, Clock, Check, Download } from "lucide-react";
+import { Wallet, ArrowUpRight, ArrowDownRight, User, Image as ImageIcon, Calendar, CheckCircle2, Clock, Check, Download, X } from "lucide-react";
 
 interface Payment { _id: string; memberName: string; amount: number; type: string; description?: string; image?: string; date: string; status: string; confirmedBy?: string; }
 
@@ -67,11 +67,11 @@ export default function PaymentPage() {
     refreshPayments();
   };
 
-  const total = payments.filter(p => p.status === "confirmed").reduce((acc, p) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
-  const totalIn = payments.filter(p => p.type === "income" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
-  const totalOut = payments.filter(p => p.type === "expense" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
+  const total = payments.filter((p: any) => p.status === "confirmed").reduce((acc: any, p: any) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
+  const totalIn = payments.filter((p: any) => p.type === "income" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
+  const totalOut = payments.filter((p: any) => p.type === "expense" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
 
-  const displayPayments = payments.filter(p => p.type === "income");
+  const displayPayments = payments.filter((p: any) => p.type === "income");
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -142,7 +142,7 @@ export default function PaymentPage() {
               <select className="sog-input" value={form.memberName} onChange={e => setForm(f => ({ ...f, memberName: e.target.value }))} required style={{ height: "46px" }}>
                 <option value="">— เลือกสมาชิก —</option>
                 <option value={user?.icName || user?.name || ""}>👤 ตัวคุณเอง ({user?.icName || user?.name})</option>
-                {members.filter(m => m.name !== (user?.icName || user?.name)).map(m => (
+                {members.filter((m: any) => m.name !== (user?.icName || user?.name)).map((m: any) => (
                   <option key={m.id} value={m.name}>{m.name}</option>
                 ))}
               </select>
@@ -196,7 +196,7 @@ export default function PaymentPage() {
                   <Wallet size={32} color="#475569" style={{ margin: "0 auto 12px" }} />
                   <p style={{ color: "#64748b", margin: 0 }}>ยังไม่มีรายการบัญชี</p>
                 </div>
-              ) : displayPayments.map((p, i) => (
+              ) : displayPayments.map((p: any, i: number) => (
                 <motion.div
                   key={p._id}
                   initial={{ opacity: 0, x: 20 }}

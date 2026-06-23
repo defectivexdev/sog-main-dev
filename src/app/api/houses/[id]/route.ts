@@ -6,7 +6,7 @@ import { isManager } from "@/lib/roles";
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
-    if (!session || !isManager(session.user.gangRole)) {
+    if (!session || !isManager(session.user.gangRole as any)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 
@@ -28,7 +28,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
-    if (!session || !isManager(session.user.gangRole)) {
+    if (!session || !isManager(session.user.gangRole as any)) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
     }
 

@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest) {
           data: {
             action: update.status === "confirmed" ? "APPROVE_PAYMENT" : "REJECT_PAYMENT",
             details: `${actorName} ${update.status === "confirmed" ? "อนุมัติ" : "ปฏิเสธ"} การ${payment.type === "income" ? "นำส่งเงิน" : "เบิกเงิน"} จำนวน ฿${payment.amount} ของ ${payment.memberName}`,
-            actorName: actorName,
+            actorName: actorName || "Unknown",
             actorRole: resolveGangRole(session.user.discordId, session.user.discordRoles),
             targetId: payment.id
           }

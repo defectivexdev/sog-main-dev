@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRole } from "@/hooks/useRole";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, ArrowUpRight, ArrowDownRight, User, Image as ImageIcon, Calendar, CheckCircle2, Clock, Check, HandCoins, Download } from "lucide-react";
+import { Wallet, ArrowUpRight, ArrowDownRight, User, Image as ImageIcon, Calendar, CheckCircle2, Clock, Check, HandCoins, Download, X } from "lucide-react";
 
 interface Payment { _id: string; memberName: string; amount: number; type: string; description?: string; image?: string; date: string; status: string; confirmedBy?: string; }
 
