@@ -71,9 +71,9 @@ export default function WithdrawPage() {
     refresh();
   };
 
-  const total = payments.filter((p: any) => p.status === "confirmed").reduce((acc, p) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
-  const totalIn = payments.filter((p: any) => p.type === "income" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
-  const totalOut = payments.filter((p: any) => p.type === "expense" && p.status === "confirmed").reduce((acc, p) => acc + p.amount, 0);
+  const total = payments.filter((p: any) => p.status === "confirmed").reduce((acc: any, p: any) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
+  const totalIn = payments.filter((p: any) => p.type === "income" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
+  const totalOut = payments.filter((p: any) => p.type === "expense" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
 
   const displayPayments = payments.filter((p: any) => p.type === "expense");
   const managerMembers = members.filter((m: any) => m.role === "leader" || m.role === "vice_leader");

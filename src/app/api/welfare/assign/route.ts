@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Use transaction to ensure both operations succeed
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const item = await tx.welfareItem.findUnique({ where: { id: welfareItemId } });
       if (!item) throw new Error("Item not found");
       
