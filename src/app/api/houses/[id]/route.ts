@@ -14,9 +14,9 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     const { name, headId } = await req.json();
 
     if (name) {
-      const allowedNames = ["บ้าน1", "บ้าน2", "บ้าน3", "บ้าน4", "บ้าน5"];
+      const allowedNames = ["บ้าน 1", "บ้าน 2", "บ้าน 3", "บ้าน 4", "บ้าน 5"];
       if (!allowedNames.includes(name)) {
-        return NextResponse.json({ success: false, error: "ไม่อนุญาตให้ใช้ชื่อนี้ (อนุญาตเฉพาะ บ้าน1 - บ้าน5 เท่านั้น)" }, { status: 400 });
+        return NextResponse.json({ success: false, error: "ไม่อนุญาตให้ใช้ชื่อนี้ (อนุญาตเฉพาะ บ้าน 1 - บ้าน 5 เท่านั้น)" }, { status: 400 });
       }
     }
 

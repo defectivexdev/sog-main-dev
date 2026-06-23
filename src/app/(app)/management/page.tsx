@@ -36,7 +36,7 @@ export default function ManagementPage() {
     }
   }, [setRes, editSettings]);
   
-  const [newHouseName, setNewHouseName] = useState("บ้าน1");
+  const [newHouseName, setNewHouseName] = useState("บ้าน 1");
 
   const fetchData = () => {
     refreshSettings();
@@ -69,7 +69,7 @@ export default function ManagementPage() {
       });
       if (res.ok) {
         toast.success("สร้างบ้านสำเร็จ!");
-        setNewHouseName("บ้าน1");
+        setNewHouseName("บ้าน 1");
         fetchData();
       } else toast.error("เกิดข้อผิดพลาด");
     } catch (err) {
@@ -163,7 +163,7 @@ export default function ManagementPage() {
               onChange={e => setNewHouseName(e.target.value)}
               style={{ padding: "8px 12px" }}
             >
-              {["บ้าน1", "บ้าน2", "บ้าน3", "บ้าน4", "บ้าน5"].map(name => (
+              {["บ้าน 1", "บ้าน 2", "บ้าน 3", "บ้าน 4", "บ้าน 5"].map(name => (
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
