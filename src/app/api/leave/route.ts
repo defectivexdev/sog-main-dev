@@ -94,6 +94,14 @@ export async function PATCH(req: NextRequest) {
     const { id, ...update } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Leave ID is required" }, { status: 400 });
 
+    const existingLeave = await prisma.leave.findUnique({ where: { id } });
+    if (!existingLeave) return NextResponse.json({ success: false, error: "Leave not found" }, { status: 404 });
+    
+    // Prevent double processing
+    if (existingLeave.status !== "pending") {
+      return NextResponse.json({ success: false, error: "Leave request already processed" }, { status: 400 });
+    }
+
     const leave = await prisma.leave.update({ where: { id: id }, data: update });
     const actorName = session.user.icName || session.user.name;
 

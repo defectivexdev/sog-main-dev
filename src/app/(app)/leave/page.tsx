@@ -24,6 +24,7 @@ export default function LeavePage() {
   const { data: session } = useSession();
   const { isManager, roleIcon, roleLabel, roleColor } = useRole();
   const [activeTab, setActiveTab] = useState<"submit" | "history" | "manage">("submit");
+  const [processingId, setProcessingId] = useState<string | null>(null);
   
   const [records, setRecords] = useState<LeaveRecord[]>([]);
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
@@ -79,6 +80,8 @@ export default function LeavePage() {
   };
 
   const updateLeaveStatus = async (id: string, status: "approved" | "rejected", rjReason?: string) => {
+    if (processingId) return; // Prevent double clicks
+    setProcessingId(id);
     const res = await fetch("/api/leave", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -92,6 +95,7 @@ export default function LeavePage() {
     } else {
       setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
+    setProcessingId(null);
     setTimeout(() => setMsg(""), 4000);
   };
 
@@ -280,10 +284,10 @@ export default function LeavePage() {
                       </div>
 
                       <div style={{ display: "flex", gap: "10px" }}>
-                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => updateLeaveStatus(r.id, "approved")} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#34d399", fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer" }}>
-                          <CheckCircle2 size={16} /> อนุมัติ
+                        <motion.button whileHover={{ scale: processingId === r.id ? 1 : 1.05 }} whileTap={{ scale: processingId === r.id ? 1 : 0.95 }} onClick={() => updateLeaveStatus(r.id, "approved")} disabled={processingId === r.id} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: processingId === r.id ? "#64748b" : "#34d399", fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: processingId === r.id ? "not-allowed" : "pointer" }}>
+                          {processingId === r.id ? <Clock size={16} className="spin" /> : <CheckCircle2 size={16} />} อนุมัติ
                         </motion.button>
-                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setSelectedLeaveId(r.id); setRejectModalOpen(true); }} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer" }}>
+                        <motion.button whileHover={{ scale: processingId === r.id ? 1 : 1.05 }} whileTap={{ scale: processingId === r.id ? 1 : 0.95 }} onClick={() => { setSelectedLeaveId(r.id); setRejectModalOpen(true); }} disabled={processingId === r.id} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)", color: processingId === r.id ? "#64748b" : "#f87171", fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: processingId === r.id ? "not-allowed" : "pointer" }}>
                           <XCircle size={16} /> ไม่อนุมัติ
                         </motion.button>
                       </div>
