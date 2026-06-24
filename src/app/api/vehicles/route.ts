@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     
-    const { resolveGangRole } = await import("@/lib/roles");
-    const roleConfig = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!roleConfig.isManager) {
+    const { resolveGangRole, isManager } = await import("@/lib/roles");
+    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
+    if (!isManager(role)) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -59,9 +59,9 @@ export async function PATCH(req: NextRequest) {
     const session = await auth();
     if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
-    const { resolveGangRole } = await import("@/lib/roles");
-    const roleConfig = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!roleConfig.isManager) {
+    const { resolveGangRole, isManager } = await import("@/lib/roles");
+    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
+    if (!isManager(role)) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -95,9 +95,9 @@ export async function DELETE(req: NextRequest) {
     const session = await auth();
     if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
-    const { resolveGangRole } = await import("@/lib/roles");
-    const roleConfig = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!roleConfig.isManager) {
+    const { resolveGangRole, isManager } = await import("@/lib/roles");
+    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
+    if (!isManager(role)) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
