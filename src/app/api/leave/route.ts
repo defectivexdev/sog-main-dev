@@ -131,7 +131,6 @@ export async function PATCH(req: NextRequest) {
           }
         });
       }
-      }
 
       // Update discord log
       const embed: DiscordEmbed = {
