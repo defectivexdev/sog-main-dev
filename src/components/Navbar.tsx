@@ -52,7 +52,6 @@ const navSections: NavSection[] = [
       { label: "ข้อมูลบ้าน (House)", href: "/house", icon: <Users size={18} /> },
       { label: "จัดการบ้าน", href: "/management", icon: <LayoutDashboard size={18} />, managerOnly: true },
       { label: "ทำเนียบผู้นำ (Leaderboard)", href: "/leaderboard", icon: <Trophy size={18} /> },
-      { label: "ประวัติรายการ (Audit Log)", href: "/audit", icon: <History size={18} />, managerOnly: true },
       { label: "ข้อมูลสมาชิก", href: "/members", icon: <Users size={18} /> }
     ],
   },
