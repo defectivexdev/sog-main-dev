@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRole } from "@/hooks/useRole";
-import { ClipboardList, Send, CalendarDays, ShieldCheck, CheckCircle2, XCircle, Search, Clock, FileText } from "lucide-react";
+import { ClipboardList, Send, CalendarDays, ShieldCheck, CheckCircle2, XCircle, Search, Clock, FileText, ImagePlus, X } from "lucide-react";
 
 interface LeaveRecord {
   id: string;
@@ -13,6 +13,7 @@ interface LeaveRecord {
   reason: string;
   status: "pending" | "approved" | "rejected";
   rejectReason?: string;
+  imageUrl?: string;
   requestDate: string;
 }
 
@@ -33,6 +34,7 @@ export default function LeavePage() {
   // Submit Form State
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ memberName: "", date: new Date().toISOString().split("T")[0], endDate: new Date().toISOString().split("T")[0], reason: "" });
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
 
   // Manage State
@@ -63,14 +65,29 @@ export default function LeavePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    let imageUrl = null;
+
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      try {
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        const uploadData = await uploadRes.json();
+        if (uploadData.url) imageUrl = uploadData.url;
+      } catch (err) {
+        console.error("Upload error", err);
+      }
+    }
+
     const res = await fetch("/api/leave", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, imageUrl }),
     });
     if (res.ok) {
       setMsg("✅ ส่งคำขอลาสำเร็จ!");
       setForm({ ...form, reason: "" }); // keep names and dates for convenience, reset reason
+      setImageFile(null);
       refresh();
     } else {
       setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
@@ -170,6 +187,25 @@ export default function LeavePage() {
                 <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>เหตุผลการลา *</label>
                 <textarea className="sog-input" rows={4} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required placeholder="อธิบายเหตุผลการลาให้ชัดเจน เช่น ป่วยไปหาหมอ, ติดธุระครอบครัว..." style={{ resize: "vertical" }} />
               </div>
+
+              {/* Image Upload */}
+              <div>
+                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>แนบรูปภาพ (ทางเลือก)</label>
+                {imageFile ? (
+                  <div style={{ position: "relative", width: "100%", maxWidth: "300px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" style={{ width: "100%", height: "auto", display: "block" }} />
+                    <button type="button" onClick={() => setImageFile(null)} style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", borderRadius: "50%", padding: "6px", cursor: "pointer" }}><X size={16} /></button>
+                  </div>
+                ) : (
+                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed rgba(201,162,39,0.3)", borderRadius: "12px", padding: "32px", cursor: "pointer", background: "rgba(201,162,39,0.02)", transition: "all 0.2s" }} className="hover-bg-gold">
+                    <ImagePlus size={32} color="#c9a227" style={{ marginBottom: "12px", opacity: 0.8 }} />
+                    <span style={{ color: "#e2e8f0", fontSize: "0.95rem", fontWeight: 600 }}>คลิกเพื่ออัปโหลดรูปภาพ</span>
+                    <span style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "4px" }}>PNG, JPG สูงสุด 5MB</span>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => { if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]); }} />
+                  </label>
+                )}
+              </div>
+
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" disabled={submitting} style={{ padding: "14px", fontSize: "1rem", marginTop: "10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                 {submitting ? <Clock size={20} className="spin" /> : <Send size={20} />}
                 {submitting ? "กำลังส่งคำร้อง..." : "ส่งคำร้องขอลา"}
@@ -221,6 +257,13 @@ export default function LeavePage() {
                           </td>
                           <td style={{ color: "#94a3b8", maxWidth: "250px" }}>
                             {r.reason}
+                            {r.imageUrl && (
+                              <div style={{ marginTop: "8px" }}>
+                                <a href={r.imageUrl} target="_blank" rel="noopener noreferrer">
+                                  <img src={r.imageUrl} alt="Attachment" style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }} />
+                                </a>
+                              </div>
+                            )}
                             {r.status === "rejected" && r.rejectReason && (
                               <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#f87171", display: "flex", alignItems: "center", gap: "4px" }}>
                                 ↳ เหตุผลที่ปฏิเสธ: {r.rejectReason}
@@ -281,6 +324,13 @@ export default function LeavePage() {
                         <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}>
                           <strong style={{ color: "#e2e8f0" }}>เหตุผล:</strong> {r.reason}
                         </p>
+                        {r.imageUrl && (
+                          <div style={{ marginTop: "12px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", display: "inline-block" }}>
+                            <a href={r.imageUrl} target="_blank" rel="noopener noreferrer">
+                              <img src={r.imageUrl} alt="Leave Attachment" style={{ maxWidth: "200px", maxHeight: "150px", display: "block", objectFit: "cover", cursor: "pointer" }} />
+                            </a>
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ display: "flex", gap: "10px" }}>

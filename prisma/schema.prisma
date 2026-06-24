@@ -105,6 +105,7 @@ model Leave {
   startDate    DateTime
   endDate      DateTime
   reason       String
+  imageUrl     String?
   status       String   @default("pending")
   rejectReason String?
   requestDate  DateTime @default(now())

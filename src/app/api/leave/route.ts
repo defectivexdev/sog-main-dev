@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         startDate: new Date(body.date),
         endDate: body.endDate ? new Date(body.endDate) : new Date(body.date),
         reason: body.reason || "",
+        imageUrl: body.imageUrl || null,
       },
     });
 
@@ -74,6 +75,7 @@ export async function POST(req: NextRequest) {
       title: "🛎️ แจ้งลาใหม่",
       description: `**ผู้แจ้ง:** \`${body.memberName}\`\n**ระยะเวลา:** \`${new Date(body.date).toLocaleDateString("th-TH")}\` ถึง \`${body.endDate ? new Date(body.endDate).toLocaleDateString("th-TH") : "-"}\`\n\n**เหตุผลการลา:**\n\`\`\`\n${body.reason || "-"}\n\`\`\``,
       color: 0xffaa00,
+      image: body.imageUrl ? { url: body.imageUrl } : undefined,
       timestamp: new Date().toISOString()
     };
     await sendDiscordMessage(CHANNELS.LEAVE, [embed]);
