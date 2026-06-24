@@ -56,9 +56,13 @@ function MembersContent() {
       if (initMemberId) {
         const found = mapped.find((m: any) => m.id === initMemberId || m.discordId === initMemberId);
         if (found) {
-          // fetch stats and history, then open modal
-          fetch(`/api/profile/stats?discordId=${found.discordId || found.id}`).then(r => r.json()).then(s => setProfileStats(s));
-          fetch(`/api/profile/history?discordId=${found.discordId || found.id}`).then(r => r.json()).then(h => setProfileHistory(h.data || []));
+          // fetch stats and history using the correct API
+          fetch(`/api/members/${found.id}`).then(r => r.json()).then(d => {
+            if (d.data) {
+              setProfileStats(d.data.stats);
+              setProfileHistory(d.data.history);
+            }
+          });
           setSelectedMember(found);
         }
       }
@@ -89,13 +93,12 @@ function MembersContent() {
     window.history.pushState(null, '', `?memberId=${member.discordId || member.id}`);
     setLoadingProfile(true);
     try {
-      const statsRes = await fetch(`/api/profile/stats?discordId=${member.discordId || member.id}`);
-      const statsData = await statsRes.json();
-      setProfileStats(statsData);
-
-      const histRes = await fetch(`/api/profile/history?discordId=${member.discordId || member.id}`);
-      const histData = await histRes.json();
-      setProfileHistory(histData.data || []);
+      const res = await fetch(`/api/members/${member.id}`);
+      const d = await res.json();
+      if (d.data) {
+        setProfileStats(d.data.stats);
+        setProfileHistory(d.data.history);
+      }
     } catch (err) {
       console.error(err);
     }
