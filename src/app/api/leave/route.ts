@@ -147,6 +147,7 @@ export async function PATCH(req: NextRequest) {
         title: update.status === "approved" ? "✅ อนุมัติการลางาน" : "❌ ปฏิเสธการลางาน",
         description: `การลางานของ **${leave.memberName}**\n**ผลการพิจารณา:** ${update.status === "approved" ? "อนุมัติ" : "ไม่อนุมัติ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ''}`,
         color: update.status === "approved" ? 0x34d399 : 0xf87171,
+        image: leave.imageUrl ? { url: leave.imageUrl } : undefined,
         footer: { text: `ตรวจสอบโดย: ${actorName}` },
         timestamp: new Date().toISOString()
       };
