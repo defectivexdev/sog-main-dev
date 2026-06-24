@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, DollarSign, CheckCircle, Target } from "lucide-react";
+import Skeleton from "@/components/Skeleton";
 
 import useSWR from "swr";
 
@@ -112,8 +113,17 @@ export default function LeaderboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="animate-fade-in" style={{ paddingBottom: "40px" }}>
-          <h1 className="page-title" style={{ margin: "0 0 24px", fontSize: "2rem", fontWeight: 800 }}>กำลังโหลด...</h1>
+        <div className="glass-card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+             <Skeleton style={{ width: "120px", height: "40px" }} />
+             <Skeleton style={{ width: "120px", height: "40px" }} />
+             <Skeleton style={{ width: "120px", height: "40px" }} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <Skeleton style={{ width: "100%", height: "80px" }} />
+            <Skeleton style={{ width: "100%", height: "60px" }} />
+            <Skeleton style={{ width: "100%", height: "60px" }} />
+          </div>
         </div>
       ) : (
         <div className="glass-card" style={{ padding: "20px" }}>

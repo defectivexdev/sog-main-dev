@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { motion } from "framer-motion";
 import { User, Phone, Edit3, Save, MessageCircle, DollarSign, Umbrella, Crown, CheckCircle2, ShieldCheck } from "lucide-react";
 import GangIDCard from "@/components/GangIDCard";
+import Skeleton from "@/components/Skeleton";
 import { toast } from "sonner";
 import { useRole } from "@/hooks/useRole";
 
@@ -20,7 +21,18 @@ export default function ProfilePage() {
 
 
   if (isLoading) {
-    return <div className="p-8 text-center" style={{ color: "#94a3b8" }}>กำลังโหลดข้อมูลโปรไฟล์...</div>;
+    return (
+      <div className="p-8">
+        <h1 className="page-title mb-6"><Skeleton style={{ width: "200px", height: "40px" }} /></h1>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 1fr) 2fr", gap: "20px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <Skeleton style={{ width: "100%", height: "400px" }} />
+            <Skeleton style={{ width: "100%", height: "200px" }} />
+          </div>
+          <div><Skeleton style={{ width: "100%", height: "600px" }} /></div>
+        </div>
+      </div>
+    );
   }
 
   if (!data?.member) {

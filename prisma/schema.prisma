@@ -25,6 +25,8 @@ model Member {
 
   @@index([status])
   @@index([discordId])
+  @@index([houseId])
+  @@index([createdAt])
 }
 
 model House {
@@ -62,6 +64,7 @@ model Activity {
 
   @@index([status])
   @@index([date])
+  @@index([createdAt])
 }
 
 model Airdrop {
@@ -76,6 +79,7 @@ model Airdrop {
   updatedAt      DateTime @updatedAt
 
   @@index([status])
+  @@index([createdAt])
 }
 
 model Attendance {
@@ -90,6 +94,7 @@ model Attendance {
   updatedAt  DateTime @updatedAt
 
   @@index([date])
+  @@index([createdAt])
 }
 
 model Leave {
@@ -107,6 +112,7 @@ model Leave {
   @@index([status])
   @@index([startDate])
   @@index([endDate])
+  @@index([createdAt])
 }
 
 model Payment {
@@ -126,6 +132,7 @@ model Payment {
   @@index([status])
   @@index([type])
   @@index([memberName])
+  @@index([createdAt])
 }
 
 model Requisition {
@@ -144,6 +151,7 @@ model Requisition {
   updatedAt    DateTime @updatedAt
 
   @@index([status])
+  @@index([createdAt])
 }
 
 model StoreItem {
@@ -157,6 +165,9 @@ model StoreItem {
   uploadedBy  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model WelfareItem {
@@ -168,6 +179,9 @@ model WelfareItem {
   status      String   @default("available")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Announcement {
@@ -178,6 +192,8 @@ model Announcement {
   isPinned  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([isPinned, createdAt])
 }
 
 model Notification {

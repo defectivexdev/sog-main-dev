@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { sendDiscordWebhook } from "@/lib/discordWebhook";
 import { resolveGangRole, isManager } from "@/lib/roles";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,6 +35,11 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    if (!rateLimit(ip, 5, 60000)) { // 5 requests per minute per IP
+      return NextResponse.json({ success: false, error: "ส่งคำขอเร็วเกินไป กรุณารอสักครู่ (Rate Limit Exceeded)" }, { status: 429 });
+    }
 
     const body = await req.json();
     if (!body.memberName || !body.amount) {

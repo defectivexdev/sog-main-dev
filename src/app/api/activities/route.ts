@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { resolveGangRole, isManager } from "@/lib/roles";
+import { rateLimit } from "@/lib/rateLimit";
 
 export async function GET() {
   try {
@@ -31,6 +32,11 @@ export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    if (!rateLimit(ip, 10, 60000)) { // 10 requests per minute per IP
+      return NextResponse.json({ error: "ส่งคำขอเร็วเกินไป กรุณารอสักครู่" }, { status: 429 });
+    }
 
     const { id, action, memberName, ...update } = await req.json();
 
