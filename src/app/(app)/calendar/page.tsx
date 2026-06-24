@@ -141,11 +141,15 @@ export default function CalendarPage() {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
     }
 
+    // Calculate local today string in YYYY-MM-DD
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     // Actual days
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       const dayEvents = events.filter(e => e.startDate.startsWith(dateStr));
-      const isToday = dateStr === new Date().toISOString().split('T')[0];
+      const isToday = dateStr === todayStr;
 
       days.push(
         <div 
