@@ -45,9 +45,9 @@ export async function POST(req: NextRequest) {
     // Send to Discord
     const embed: DiscordEmbed = {
       title: "🎁 เพิ่มของสวัสดิการใหม่",
-      description: `**ไอเทม:** \`${item.name}\`\n**เงื่อนไข:** \`${item.condition || "-"}\`\n${item.description ? `*${item.description}*` : ""}`,
+      description: `**ไอเทม:** \`${item.name}\`\n**จำนวน:** \`${item.quantity}\`\n${item.description ? `*${item.description}*` : ""}`,
       color: 0x8b5cf6, // Purple
-      image: item.imageUrl ? { url: item.imageUrl } : undefined,
+      image: item.image ? { url: item.image } : undefined,
       timestamp: new Date().toISOString()
     };
     await sendDiscordMessage(CHANNELS.WELFARE, [embed]);
