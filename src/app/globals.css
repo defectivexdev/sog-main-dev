@@ -302,3 +302,42 @@ body {
 
 /* ——— Responsive ——— */
 /* Removed mobile overrides to keep sidebar always visible */
+
+@media (max-width: 768px) {
+  .sog-table {
+    display: block;
+    width: 100%;
+  }
+  .sog-table thead {
+    display: none;
+  }
+  .sog-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sog-table tr {
+    display: flex;
+    flex-direction: column;
+    background: rgba(15,22,41,0.6) !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    border-radius: 12px;
+    padding: 16px;
+    gap: 8px;
+  }
+  .sog-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0;
+    border: none !important;
+    background: transparent !important;
+  }
+  .sog-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #64748b;
+    margin-right: 12px;
+    min-width: 100px;
+  }
+}

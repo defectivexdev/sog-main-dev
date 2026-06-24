@@ -69,9 +69,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               if (discordMember.user?.avatar) {
                 token.discordAvatar = `https://cdn.discordapp.com/avatars/${discordMember.user.id}/${discordMember.user.avatar}.png`;
               }
+            } else if (res.status === 404) {
+              // User left the guild!
+              const prisma = (await import("@/lib/db")).default;
+              await prisma.member.update({
+                where: { discordId: token.discordId as string },
+                data: { status: "left", leftAt: new Date() }
+              });
+              
+              await prisma.auditLog.create({
+                data: {
+                  action: "AUTO_ARCHIVE_MEMBER",
+                  targetId: token.discordId as string,
+                  actorName: "System (Auto-Sync)",
+                  actorRole: "system",
+                  details: `Member left Discord server detected on token refresh. Auto-archived.`
+                }
+              });
+              
+              throw new Error("User left the Discord server");
             }
           }
-        } catch (err) {
+        } catch (err: any) {
+          if (err.message === "User left the Discord server") throw err; // Propagate to invalidate session
           console.error("Error refreshing Discord roles:", err);
         }
       }

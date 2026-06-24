@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { resolveGangRole, isManager } from "@/lib/roles";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 import { sendDiscordMessage, editDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
-export async function GET() {
+export const GET = withAuth(async () => {
   try {
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
@@ -22,19 +21,14 @@ export async function GET() {
       },
       orderBy: { date: 'desc' },
     });
-    return NextResponse.json({ data });
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withManagerAuth(async ({ req, session }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ error: "Forbidden — managers only" }, { status: 403 });
-
     const body = await req.json();
     const recordedBy = session.user.icName || session.user.name;
     const rec = await prisma.attendance.create({ data: { ...body, recordedBy } });
@@ -57,20 +51,15 @@ export async function POST(req: NextRequest) {
       rec.discordMessageId = msgId;
     }
 
-    return NextResponse.json({ data: rec }, { status: 201 });
+    return NextResponse.json({ success: true, data: rec }, { status: 201 });
   } catch (error) {
     console.error("Attendance POST error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
     const { id, ...update } = await req.json();
     const rec = await prisma.attendance.update({ where: { id: id }, data: update });
 
@@ -89,20 +78,20 @@ export async function PATCH(req: NextRequest) {
       await editDiscordMessage(CHANNELS.ATTENDANCE, rec.discordMessageId, [embed]);
     }
 
-    return NextResponse.json({ data: rec });
+    return NextResponse.json({ success: true, data: rec });
   } catch (error) {
     console.error("Attendance PATCH error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-  if (!isManager(role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const { id } = await req.json();
-  await prisma.attendance.delete({ where: { id: id } });
-  return NextResponse.json({ ok: true });
-}
+export const DELETE = withManagerAuth(async ({ req }) => {
+  try {
+    const { id } = await req.json();
+    await prisma.attendance.delete({ where: { id: id } });
+    return NextResponse.json({ success: true, data: null });
+  } catch (error) {
+    console.error("Attendance DELETE error:", error);
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
+  }
+});

@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { resolveGangRole, isManager } from "@/lib/roles";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
-export async function GET() {
+export const GET = withAuth(async ({ req }) => {
   try {
-    const data = await prisma.requisition.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json({ data });
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get("limit") || "1000");
+    const page = parseInt(searchParams.get("page") || "1");
+    
+    const [data, total] = await Promise.all([
+      prisma.requisition.findMany({ 
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: (page - 1) * limit
+      }),
+      prisma.requisition.count()
+    ]);
+    
+    return NextResponse.json({ 
+      success: true,
+      data,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    });
   } catch (error: any) {
     console.error("GET /api/requisition error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     const qty = Number(body.quantity);
     if (isNaN(qty) || qty <= 0) {
-      return NextResponse.json({ error: "จำนวนเบิกต้องมากกว่า 0" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "จำนวนเบิกต้องมากกว่า 0" }, { status: 400 });
     }
 
     const req_ = await prisma.requisition.create({ 
@@ -46,20 +58,15 @@ export async function POST(req: NextRequest) {
     };
     await sendDiscordMessage(CHANNELS.REQUISITION, [embed]);
 
-    return NextResponse.json({ data: req_ }, { status: 201 });
+    return NextResponse.json({ success: true, data: req_ }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/requisition error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req, session, role }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
     const { id, ...update } = await req.json();
     const actorName = session.user.icName || session.user.name;
     const rec = await prisma.requisition.update({ where: { id: id }, data: { ...update, approvedBy: actorName } });
@@ -114,28 +121,23 @@ export async function PATCH(req: NextRequest) {
       await sendDiscordMessage(CHANNELS.REQUISITION, [embed]);
     }
 
-    return NextResponse.json({ data: rec });
+    return NextResponse.json({ success: true, data: rec });
   } catch (error: any) {
     console.error("PATCH /api/requisition error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+    if (!id) return NextResponse.json({ success: false, error: "ID required" }, { status: 400 });
 
     await prisma.requisition.delete({ where: { id } });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: null });
   } catch (error: any) {
     console.error("DELETE /api/requisition error:", error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
-}
+});

@@ -4,7 +4,12 @@ import { useRole } from "@/hooks/useRole";
 import ImageUpload from "@/components/ImageUpload";
 import Image from "next/image";
 import EmptyState from "@/components/ui/EmptyState";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Store } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import Modal from "@/components/ui/Modal";
+import Toast from "@/components/ui/Toast";
 
 interface StoreItem { _id?: string; id?: string; image?: string; uploadedBy?: string; createdAt: string; }
 
@@ -14,7 +19,7 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ imageUrl: "" });
-  const [msg, setMsg] = useState("");
+  const { message, showSuccess, showError } = useToast();
 
   const refresh = () => fetch("/api/store").then(r => r.json()).then(d => { setItems(d.data || []); setLoading(false); });
   useEffect(() => { refresh(); }, []);
@@ -22,9 +27,8 @@ export default function StorePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await fetch("/api/store", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (res.ok) { setMsg("✅ อัปโหลดรูปภาพสำเร็จ!"); setForm({ imageUrl: "" }); setShowForm(false); refresh(); }
-    else setMsg("❌ เกิดข้อผิดพลาด");
-    setTimeout(() => setMsg(""), 4000);
+    if (res.ok) { showSuccess("อัปโหลดรูปภาพสำเร็จ!"); setForm({ imageUrl: "" }); setShowForm(false); refresh(); }
+    else showError("เกิดข้อผิดพลาด");
   };
 
   const deleteItem = async (id: string) => {
@@ -35,30 +39,27 @@ export default function StorePage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-        <div><h1 className="page-title">🏪 ของร้าน</h1><p className="page-subtitle">รายการสินค้าในร้านของแก๊งค์</p></div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <span style={{ padding: "6px 14px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40` }}>{roleIcon} {roleLabel}</span>
-          {isManager && <button className="btn-gold" onClick={() => setShowForm(!showForm)}>+ เพิ่มสินค้า</button>}
-        </div>
-      </div>
+      <PageHeader
+        icon={Store}
+        title="ของร้าน"
+        subtitle="รายการสินค้าในร้านของแก๊งค์"
+        roleBadge={<RoleBadge icon={roleIcon} label={roleLabel} color={roleColor} />}
+        actions={isManager && <button className="btn-gold" onClick={() => setShowForm(true)}>+ เพิ่มสินค้า</button>}
+      />
 
-      {msg && <div style={{ padding: "12px 16px", borderRadius: "8px", marginBottom: "16px", background: msg.startsWith("✅") ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(16,185,129,0.3)" : "rgba(239,68,68,0.3)"}` }}>{msg}</div>}
+      <Toast message={message} />
 
-      {isManager && showForm && (
-        <div className="glass-card" style={{ padding: "24px", marginBottom: "24px" }}>
-          <h3 style={{ color: "#c9a227", fontWeight: 700, marginBottom: "20px" }}>เพิ่มสินค้าใหม่</h3>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "20px" }}>
-              <ImageUpload value={form.imageUrl} onChange={url => setForm(f => ({ ...f, imageUrl: url }))} label="อัปโหลดรูปภาพ" />
-            </div>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button type="submit" className="btn-gold">บันทึก</button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#94a3b8", cursor: "pointer" }}>ยกเลิก</button>
-            </div>
-          </form>
-        </div>
-      )}
+      <Modal open={isManager && showForm} onClose={() => setShowForm(false)} title="เพิ่มสินค้าใหม่">
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "20px" }}>
+            <ImageUpload value={form.imageUrl} onChange={url => setForm(f => ({ ...f, imageUrl: url }))} label="อัปโหลดรูปภาพ" />
+          </div>
+          <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+            <button type="button" onClick={() => setShowForm(false)} style={{ padding: "10px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#94a3b8", cursor: "pointer" }}>ยกเลิก</button>
+            <button type="submit" className="btn-gold">บันทึก</button>
+          </div>
+        </form>
+      </Modal>
 
       {loading ? <p style={{ color: "#64748b" }}>กำลังโหลด...</p> : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "16px" }}>

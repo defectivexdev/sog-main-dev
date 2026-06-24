@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { resolveGangRole, isManager } from "@/lib/roles";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async ({ req }) => {
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "1000");
@@ -28,15 +27,10 @@ export async function GET(req: NextRequest) {
     console.error("GET /api/welfare error:", error);
     return NextResponse.json({ success: false, error: "Internal Server Error", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-
     const body = await req.json();
     if (!body.name) return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
 
@@ -57,15 +51,10 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/welfare error:", error);
     return NextResponse.json({ success: false, error: "Failed to create welfare item", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-
     const { id, ...update } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Item ID is required" }, { status: 400 });
 
@@ -75,22 +64,17 @@ export async function PATCH(req: NextRequest) {
     console.error("PATCH /api/welfare error:", error);
     return NextResponse.json({ success: false, error: "Failed to update welfare item", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-
     const { id } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Item ID is required" }, { status: 400 });
 
     await prisma.welfareItem.delete({ where: { id: id } });
-    return NextResponse.json({ success: true, ok: true });
+    return NextResponse.json({ success: true, data: null });
   } catch (error: any) {
     console.error("DELETE /api/welfare error:", error);
     return NextResponse.json({ success: false, error: "Failed to delete welfare item", details: error.message }, { status: 500 });
   }
-}
+});

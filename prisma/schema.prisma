@@ -20,6 +20,7 @@ model Member {
   status    String   @default("active")
   houseId   String?
   house     House?   @relation(fields: [houseId], references: [id])
+  leftAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -238,4 +239,19 @@ model GangVehicle {
 
   @@index([status])
   @@index([assignedTo])
+}
+
+model GangEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  type        String   @default("event") // event, meeting, war
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([startDate])
+  @@index([type])
 }

@@ -6,6 +6,14 @@ import { useRole } from "@/hooks/useRole";
 import ImageUpload from "@/components/ImageUpload";
 import Image from "next/image";
 import { ShoppingCart, Send, ClipboardList, ShieldCheck, CheckCircle2, XCircle, Search, Clock, Box, PackageCheck } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
+import Toast from "@/components/ui/Toast";
+import Modal from "@/components/ui/Modal";
+import Pagination from "@/components/ui/Pagination";
+import FormField from "@/components/ui/FormField";
+import { useToast } from "@/hooks/useToast";
 
 interface ReqRecord {
   id: string; // Prisma mapped `id`
@@ -20,10 +28,6 @@ interface ReqRecord {
   createdAt: string;
 }
 
-const statusMap: Record<string, string> = { pending: "badge-pending", approved: "badge-approved", rejected: "badge-rejected", delivered: "badge-approved" };
-const statusLabel: Record<string, string> = { pending: "รอดำเนินการ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ", delivered: "ส่งมอบแล้ว" };
-const statusIcon: Record<string, any> = { pending: <Clock size={14} />, approved: <CheckCircle2 size={14} />, rejected: <XCircle size={14} />, delivered: <PackageCheck size={14} /> };
-
 export default function RequisitionPage() {
   const { data: session } = useSession();
   const { isManager, roleIcon, roleLabel, roleColor, user } = useRole();
@@ -33,10 +37,14 @@ export default function RequisitionPage() {
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const [pagination, setPagination] = useState<any>(null);
+  
   // Submit Form State
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ memberName: "", itemName: "", quantity: 1, unit: "ชิ้น", reason: "", imageUrl: "" });
-  const [msg, setMsg] = useState("");
+  const { message, showSuccess, showError } = useToast();
 
   // Manage State
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -47,12 +55,13 @@ export default function RequisitionPage() {
   const refresh = () => {
     setLoading(true);
     Promise.all([
-      fetch("/api/requisition").then((r) => r.json()),
+      fetch(`/api/requisition?page=${page}&limit=${limit}`).then((r) => r.json()),
       fetch("/api/members").then((r) => r.json()),
     ]).then(([reqData, memberData]) => {
       // API returns id or _id depending on old/new records
       const mapped = (reqData.data || []).map((r: any) => ({ ...r, id: r.id || r._id }));
       setRecords(mapped);
+      setPagination(reqData.pagination);
       setMembers(
         (memberData.data || []).map((m: { id: string; name: string; icName?: string }) => ({
           id: m.id,
@@ -63,7 +72,7 @@ export default function RequisitionPage() {
     });
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); }, [page]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,14 +84,13 @@ export default function RequisitionPage() {
       body: JSON.stringify(payload),
     });
     if (res.ok) {
-      setMsg("✅ ส่งคำขอเบิกของสำเร็จ!");
+      showSuccess("ส่งคำขอเบิกของสำเร็จ!");
       setForm({ ...form, itemName: "", reason: "", imageUrl: "", quantity: 1 });
       refresh();
     } else {
-      setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
+      showError("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
     setSubmitting(false);
-    setTimeout(() => setMsg(""), 4000);
   };
 
   const updateReqStatus = async (id: string, status: "approved" | "rejected" | "delivered", rjReason?: string) => {
@@ -92,14 +100,13 @@ export default function RequisitionPage() {
       body: JSON.stringify({ id, status, rejectReason: rjReason }),
     });
     if (res.ok) {
-      setMsg(`✅ ทำรายการสำเร็จ!`);
+      showSuccess(`ทำรายการสำเร็จ!`);
       setRejectModalOpen(false);
       setRejectReason("");
       refresh();
     } else {
-      setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
+      showError("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
-    setTimeout(() => setMsg(""), 4000);
   };
 
   const pendingRequests = records.filter((r: any) => r.status === "pending" || r.status === "approved"); // Mangers see pending & approved (to mark delivered)
@@ -108,17 +115,12 @@ export default function RequisitionPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-        <div>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ShoppingCart size={32} color="#c9a227" /> ระบบเบิกของ
-          </h1>
-          <p className="page-subtitle">ขอเบิกสินค้า อาวุธ หรืออุปกรณ์ส่วนกลาง</p>
-        </div>
-        <span style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {roleIcon} {roleLabel}
-        </span>
-      </div>
+      <PageHeader
+        icon={ShoppingCart}
+        title="ระบบเบิกของ"
+        subtitle="ขอเบิกสินค้า อาวุธ หรืออุปกรณ์ส่วนกลาง"
+        roleBadge={<RoleBadge icon={roleIcon} label={roleLabel} color={roleColor} />}
+      />
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "16px", overflowX: "auto" }}>
@@ -135,11 +137,7 @@ export default function RequisitionPage() {
         )}
       </div>
 
-      {msg && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "12px 16px", borderRadius: "10px", marginBottom: "24px", background: msg.startsWith("✅") ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {msg}
-        </motion.div>
-      )}
+      <Toast message={message} />
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -151,31 +149,30 @@ export default function RequisitionPage() {
               <Box size={20} /> แบบฟอร์มขอเบิกของ
             </h2>
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ชื่อผู้ขอ *</label>
+              <FormField label="ชื่อผู้ขอ" required>
                 <select className="sog-input" value={form.memberName} onChange={(e) => setForm({ ...form, memberName: e.target.value })} required>
                   <option value="">— เลือกชื่อของคุณ —</option>
                   {members.map((m) => (<option key={m.id} value={m.name}>{m.name}</option>))}
                 </select>
-              </div>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ชื่อของที่ต้องการเบิก *</label>
+              </FormField>
+              <FormField label="ชื่อของที่ต้องการเบิก" required>
                 <input type="text" className="sog-input" value={form.itemName} onChange={(e) => setForm({ ...form, itemName: e.target.value })} required placeholder="เช่น อาวุธ, ยา, วิทยุ..." />
-              </div>
+              </FormField>
               <div style={{ display: "flex", gap: "16px" }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>จำนวน *</label>
-                  <input type="number" className="sog-input" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} required min={1} />
+                  <FormField label="จำนวน" required>
+                    <input type="number" className="sog-input" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} required min={1} />
+                  </FormField>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>หน่วย *</label>
-                  <input type="text" className="sog-input" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} required placeholder="ชิ้น, กล่อง, กระบอก..." />
+                  <FormField label="หน่วย" required>
+                    <input type="text" className="sog-input" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} required placeholder="ชิ้น, กล่อง, กระบอก..." />
+                  </FormField>
                 </div>
               </div>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>เหตุผลการเบิก *</label>
+              <FormField label="เหตุผลการเบิก" required>
                 <textarea className="sog-input" rows={3} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required placeholder="อธิบายเหตุผลให้ชัดเจน..." style={{ resize: "vertical" }} />
-              </div>
+              </FormField>
               <ImageUpload value={form.imageUrl} onChange={url => setForm({ ...form, imageUrl: url })} label="แนบรูปภาพอ้างอิง (ถ้ามี)" />
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" disabled={submitting} style={{ padding: "14px", fontSize: "1rem", marginTop: "10px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                 {submitting ? <Clock size={20} className="spin" /> : <Send size={20} />}
@@ -217,9 +214,7 @@ export default function RequisitionPage() {
                             <span>{new Date(r.createdAt).toLocaleDateString("th-TH", { day: 'numeric', month: 'short', year: '2-digit' })}</span>
                           </p>
                         </div>
-                        <span className={statusMap[r.status]} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
-                          {statusIcon[r.status]} {statusLabel[r.status]}
-                        </span>
+                        <StatusBadge status={r.status} />
                       </div>
                       <div style={{ marginTop: "8px", padding: "8px 12px", background: "rgba(0,0,0,0.2)", borderRadius: "8px" }}>
                         <p style={{ margin: 0, fontSize: "0.85rem", color: "#94a3b8" }}><strong>เหตุผล:</strong> {r.reason}</p>
@@ -232,6 +227,12 @@ export default function RequisitionPage() {
                     </div>
                   </motion.div>
                 ))}
+                
+                {pagination && pagination.totalPages > 1 && (
+                  <div style={{ marginTop: "24px" }}>
+                    <Pagination page={page} totalPages={pagination.totalPages} onPageChange={setPage} />
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -298,36 +299,27 @@ export default function RequisitionPage() {
       </AnimatePresence>
 
       {/* Reject Modal */}
-      <AnimatePresence>
-        {rejectModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="glass-card" style={{ width: "100%", maxWidth: "450px", padding: "32px", border: "1px solid rgba(248,113,113,0.3)" }}>
-              <h2 style={{ color: "#f87171", fontWeight: 800, fontSize: "1.2rem", margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <XCircle size={24} /> ปฏิเสธคำขอเบิกของ
-              </h2>
-              <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
-                กรุณาระบุเหตุผลที่ปฏิเสธ (เช่น ของหมด, ไม่จำเป็นต้องใช้...)
-              </p>
-              <textarea 
-                className="sog-input" 
-                rows={3} 
-                value={rejectReason} 
-                onChange={e => setRejectReason(e.target.value)} 
-                placeholder="ระบุเหตุผลที่ปฏิเสธ..." 
-                style={{ resize: "vertical", marginBottom: "20px" }} 
-              />
-              <div style={{ display: "flex", gap: "10px" }}>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => updateReqStatus(selectedReqId, "rejected", rejectReason)} style={{ flex: 1, padding: "12px", borderRadius: "10px", background: "#f87171", color: "#fff", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                  <Send size={16} /> ยืนยันการปฏิเสธ
-                </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setRejectModalOpen(false); setRejectReason(""); }} style={{ padding: "12px 24px", borderRadius: "10px", background: "rgba(255,255,255,0.1)", color: "#e2e8f0", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer" }}>
-                  ยกเลิก
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Modal open={rejectModalOpen} onClose={() => { setRejectModalOpen(false); setRejectReason(""); }} title={<span style={{ display: "flex", alignItems: "center", gap: "8px", color: "#f87171" }}><XCircle size={24} /> ปฏิเสธคำขอเบิกของ</span>} maxWidth="450px">
+        <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
+          กรุณาระบุเหตุผลที่ปฏิเสธ (เช่น ของหมด, ไม่จำเป็นต้องใช้...)
+        </p>
+        <textarea 
+          className="sog-input" 
+          rows={3} 
+          value={rejectReason} 
+          onChange={e => setRejectReason(e.target.value)} 
+          placeholder="ระบุเหตุผลที่ปฏิเสธ..." 
+          style={{ resize: "vertical", marginBottom: "20px" }} 
+        />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => updateReqStatus(selectedReqId, "rejected", rejectReason)} style={{ flex: 1, padding: "12px", borderRadius: "10px", background: "#f87171", color: "#fff", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            <Send size={16} /> ยืนยันการปฏิเสธ
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setRejectModalOpen(false); setRejectReason(""); }} style={{ padding: "12px 24px", borderRadius: "10px", background: "rgba(255,255,255,0.1)", color: "#e2e8f0", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer" }}>
+            ยกเลิก
+          </motion.button>
+        </div>
+      </Modal>
 
     </motion.div>
   );

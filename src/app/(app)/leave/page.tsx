@@ -4,6 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRole } from "@/hooks/useRole";
 import { ClipboardList, Send, CalendarDays, ShieldCheck, CheckCircle2, XCircle, Search, Clock, FileText, ImagePlus, X } from "lucide-react";
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import StatusBadge from "@/components/ui/StatusBadge";
+import Toast from "@/components/ui/Toast";
+import Modal from "@/components/ui/Modal";
+import DataTable from "@/components/ui/DataTable";
+import FormField from "@/components/ui/FormField";
+import { useToast } from "@/hooks/useToast";
 
 interface LeaveRecord {
   id: string;
@@ -16,10 +24,6 @@ interface LeaveRecord {
   imageUrl?: string;
   requestDate: string;
 }
-
-const statusMap: Record<string, string> = { pending: "badge-pending", approved: "badge-approved", rejected: "badge-rejected" };
-const statusLabel: Record<string, string> = { pending: "รอดำเนินการ", approved: "อนุมัติแล้ว", rejected: "ไม่อนุมัติ" };
-const statusIcon: Record<string, any> = { pending: <Clock size={14} />, approved: <CheckCircle2 size={14} />, rejected: <XCircle size={14} /> };
 
 export default function LeavePage() {
   const { data: session } = useSession();
@@ -35,7 +39,7 @@ export default function LeavePage() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ memberName: "", date: new Date().toISOString().split("T")[0], endDate: new Date().toISOString().split("T")[0], reason: "" });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [msg, setMsg] = useState("");
+  const { message, showSuccess, showError } = useToast();
 
   // Manage State
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -86,15 +90,14 @@ export default function LeavePage() {
       body: JSON.stringify({ ...form, imageUrl }),
     });
     if (res.ok) {
-      setMsg("✅ ส่งคำขอลาสำเร็จ!");
+      showSuccess("ส่งคำขอลาสำเร็จ!");
       setForm({ ...form, reason: "" }); // keep names and dates for convenience, reset reason
       setImageFile(null);
       refresh();
     } else {
-      setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
+      showError("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
     setSubmitting(false);
-    setTimeout(() => setMsg(""), 4000);
   };
 
   const updateLeaveStatus = async (id: string, status: "approved" | "rejected", rjReason?: string) => {
@@ -106,15 +109,14 @@ export default function LeavePage() {
       body: JSON.stringify({ id, status, rejectReason: rjReason }),
     });
     if (res.ok) {
-      setMsg(`✅ ทำรายการสำเร็จ!`);
+      showSuccess(`ทำรายการสำเร็จ!`);
       setRejectModalOpen(false);
       setRejectReason("");
       refresh();
     } else {
-      setMsg("❌ เกิดข้อผิดพลาด กรุณาลองใหม่");
+      showError("เกิดข้อผิดพลาด กรุณาลองใหม่");
     }
     setProcessingId(null);
-    setTimeout(() => setMsg(""), 4000);
   };
 
   const myHistory = records.filter((r: any) => r.memberName === (session?.user?.icName || session?.user?.name));
@@ -124,17 +126,12 @@ export default function LeavePage() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-        <div>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <ClipboardList size={32} color="#c9a227" /> แจ้งลางาน
-          </h1>
-          <p className="page-subtitle">ส่งคำขอลาและดูประวัติการลาของสมาชิก</p>
-        </div>
-        <span style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {roleIcon} {roleLabel}
-        </span>
-      </div>
+      <PageHeader 
+        icon={ClipboardList} 
+        title="แจ้งลางาน" 
+        subtitle="ส่งคำขอลาและดูประวัติการลาของสมาชิก" 
+        roleBadge={<RoleBadge icon={roleIcon} label={roleLabel} color={roleColor} />} 
+      />
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "16px", overflowX: "auto" }}>
@@ -151,11 +148,7 @@ export default function LeavePage() {
         )}
       </div>
 
-      {msg && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "12px 16px", borderRadius: "10px", marginBottom: "24px", background: msg.startsWith("✅") ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {msg}
-        </motion.div>
-      )}
+      <Toast message={message} />
 
       {/* Content */}
       <AnimatePresence mode="wait">
@@ -167,27 +160,27 @@ export default function LeavePage() {
               <FileText size={20} /> แบบฟอร์มแจ้งลางาน
             </h2>
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ชื่อสมาชิก *</label>
+              <FormField label="ชื่อสมาชิก" required>
                 <select className="sog-input" value={form.memberName} onChange={(e) => setForm({ ...form, memberName: e.target.value })} required>
                   <option value="">— เลือกชื่อของคุณ —</option>
                   {members.map((m) => (<option key={m.id} value={m.name}>{m.name}</option>))}
                 </select>
-              </div>
+              </FormField>
               <div style={{ display: "flex", gap: "16px" }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ตั้งแต่วันที่ *</label>
-                  <input type="date" className="sog-input" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+                  <FormField label="ตั้งแต่วันที่" required>
+                    <input type="date" className="sog-input" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
+                  </FormField>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ถึงวันที่ *</label>
-                  <input type="date" className="sog-input" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} required min={form.date} />
+                  <FormField label="ถึงวันที่" required>
+                    <input type="date" className="sog-input" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} required min={form.date} />
+                  </FormField>
                 </div>
               </div>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>เหตุผลการลา *</label>
+              <FormField label="เหตุผลการลา" required>
                 <textarea className="sog-input" rows={4} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required placeholder="อธิบายเหตุผลการลาให้ชัดเจน เช่น ป่วยไปหาหมอ, ติดธุระครอบครัว..." style={{ resize: "vertical" }} />
-              </div>
+              </FormField>
 
               {/* Image Upload */}
               <div>
@@ -229,59 +222,57 @@ export default function LeavePage() {
             </div>
 
             {loading ? <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>กำลังโหลดข้อมูล...</div> : (
-              <div style={{ overflowX: "auto" }}>
-                <table className="sog-table">
-                  <thead>
-                    <tr>
-                      <th>ชื่อสมาชิก</th>
-                      <th>ช่วงเวลาที่ลา</th>
-                      <th>เหตุผล</th>
-                      <th style={{ textAlign: "center" }}>สถานะ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredHistory.length === 0 ? <tr><td colSpan={4} style={{ textAlign: "center", color: "#64748b", padding: "32px" }}>ยังไม่มีประวัติการลา</td></tr>
-                    : filteredHistory.map((r) => {
+              <DataTable 
+                columns={[
+                  { header: "ชื่อสมาชิก", accessor: "memberName", width: "20%" },
+                  { 
+                    header: "ช่วงเวลาที่ลา", 
+                    width: "25%",
+                    render: (r: any) => {
                       const startDate = new Date(r.startDate).toLocaleDateString("th-TH", { day: '2-digit', month: 'short', year: '2-digit' });
                       const endDate = new Date(r.endDate).toLocaleDateString("th-TH", { day: '2-digit', month: 'short', year: '2-digit' });
                       const diffTime = Math.abs(new Date(r.endDate).getTime() - new Date(r.startDate).getTime());
                       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                      
                       return (
-                        <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <td style={{ fontWeight: 600 }}>{r.memberName}</td>
-                          <td>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ color: "#e2e8f0" }}>{startDate === endDate ? startDate : `${startDate} - ${endDate}`}</span>
-                              <span style={{ fontSize: "0.75rem", color: "#94a3b8", background: "rgba(255,255,255,0.05)", padding: "2px 6px", borderRadius: "10px" }}>{diffDays} วัน</span>
-                            </div>
-                          </td>
-                          <td style={{ color: "#94a3b8", maxWidth: "250px" }}>
-                            {r.reason}
-                            {r.imageUrl && (
-                              <div style={{ marginTop: "8px" }}>
-                                <button type="button" onClick={() => setPreviewImage(r.imageUrl!)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.2)", padding: "4px 10px", borderRadius: "16px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s" }} className="hover-text-white hover-bg-glass">
-                                  <ImagePlus size={14} /> ดูรูปแนบ
-                                </button>
-                              </div>
-                            )}
-                            {r.status === "rejected" && r.rejectReason && (
-                              <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#f87171", display: "flex", alignItems: "center", gap: "4px" }}>
-                                ↳ เหตุผลที่ปฏิเสธ: {r.rejectReason}
-                              </div>
-                            )}
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            <span className={statusMap[r.status]} style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>
-                              {statusIcon[r.status]} {statusLabel[r.status]}
-                            </span>
-                          </td>
-                        </motion.tr>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ color: "#e2e8f0" }}>{startDate === endDate ? startDate : `${startDate} - ${endDate}`}</span>
+                          <span style={{ fontSize: "0.75rem", color: "#94a3b8", background: "rgba(255,255,255,0.05)", padding: "2px 6px", borderRadius: "10px" }}>{diffDays} วัน</span>
+                        </div>
                       );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    }
+                  },
+                  { 
+                    header: "เหตุผล", 
+                    width: "40%",
+                    render: (r: any) => (
+                      <div style={{ color: "#94a3b8", maxWidth: "250px" }}>
+                        {r.reason}
+                        {r.imageUrl && (
+                          <div style={{ marginTop: "8px" }}>
+                            <button type="button" onClick={() => setPreviewImage(r.imageUrl!)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.2)", padding: "4px 10px", borderRadius: "16px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s" }} className="hover-text-white hover-bg-glass">
+                              <ImagePlus size={14} /> ดูรูปแนบ
+                            </button>
+                          </div>
+                        )}
+                        {r.status === "rejected" && r.rejectReason && (
+                          <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#f87171", display: "flex", alignItems: "center", gap: "4px" }}>
+                            ↳ เหตุผลที่ปฏิเสธ: {r.rejectReason}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  },
+                  { 
+                    header: "สถานะ", 
+                    align: "center",
+                    width: "15%",
+                    render: (r: any) => <StatusBadge status={r.status} />
+                  }
+                ]}
+                data={filteredHistory}
+                keyExtractor={(item: any) => item.id}
+                emptyText="ยังไม่มีประวัติการลา"
+              />
             )}
           </motion.div>
         )}
@@ -352,48 +343,36 @@ export default function LeavePage() {
       </AnimatePresence>
 
       {/* Reject Modal */}
-      <AnimatePresence>
-        {rejectModalOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(5px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="glass-card" style={{ width: "100%", maxWidth: "450px", padding: "32px", border: "1px solid rgba(248,113,113,0.3)" }}>
-              <h2 style={{ color: "#f87171", fontWeight: 800, fontSize: "1.2rem", margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <XCircle size={24} /> ปฏิเสธคำร้อง
-              </h2>
-              <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
-                กรุณาระบุเหตุผลที่ไม่อนุมัติการลาครั้งนี้ (จะแสดงให้ผู้ยื่นคำร้องเห็น)
-              </p>
-              <textarea 
-                className="sog-input" 
-                rows={3} 
-                value={rejectReason} 
-                onChange={e => setRejectReason(e.target.value)} 
-                placeholder="ระบุเหตุผล เช่น เอกสารไม่ครบ, วันลากระชั้นชิดเกินไป..." 
-                style={{ resize: "vertical", marginBottom: "20px" }} 
-              />
-              <div style={{ display: "flex", gap: "10px" }}>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => updateLeaveStatus(selectedLeaveId, "rejected", rejectReason)} style={{ flex: 1, padding: "12px", borderRadius: "10px", background: "#f87171", color: "#fff", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                  <Send size={16} /> ยืนยันการปฏิเสธ
-                </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setRejectModalOpen(false); setRejectReason(""); }} style={{ padding: "12px 24px", borderRadius: "10px", background: "rgba(255,255,255,0.1)", color: "#e2e8f0", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer" }}>
-                  ยกเลิก
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Modal open={rejectModalOpen} onClose={() => { setRejectModalOpen(false); setRejectReason(""); }} title={<span style={{ display: "flex", alignItems: "center", gap: "8px", color: "#f87171" }}><XCircle size={24} /> ปฏิเสธคำร้อง</span>} maxWidth="450px">
+        <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
+          กรุณาระบุเหตุผลที่ไม่อนุมัติการลาครั้งนี้ (จะแสดงให้ผู้ยื่นคำร้องเห็น)
+        </p>
+        <textarea 
+          className="sog-input" 
+          rows={3} 
+          value={rejectReason} 
+          onChange={e => setRejectReason(e.target.value)} 
+          placeholder="ระบุเหตุผล เช่น เอกสารไม่ครบ, วันลากระชั้นชิดเกินไป..." 
+          style={{ resize: "vertical", marginBottom: "20px" }} 
+        />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => updateLeaveStatus(selectedLeaveId, "rejected", rejectReason)} style={{ flex: 1, padding: "12px", borderRadius: "10px", background: "#f87171", color: "#fff", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            <Send size={16} /> ยืนยันการปฏิเสธ
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { setRejectModalOpen(false); setRejectReason(""); }} style={{ padding: "12px 24px", borderRadius: "10px", background: "rgba(255,255,255,0.1)", color: "#e2e8f0", fontWeight: 700, fontSize: "0.95rem", border: "none", cursor: "pointer" }}>
+            ยกเลิก
+          </motion.button>
+        </div>
+      </Modal>
 
       {/* Image Preview Modal */}
-      <AnimatePresence>
+      <Modal open={!!previewImage} onClose={() => setPreviewImage(null)} title="ดูรูปแนบ" maxWidth="90vw">
         {previewImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={() => setPreviewImage(null)}>
-            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }} onClick={e => e.stopPropagation()}>
-              <button type="button" onClick={() => setPreviewImage(null)} style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "50%", padding: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={20} /></button>
-              <img src={previewImage} alt="Preview full size" style={{ maxWidth: "100%", maxHeight: "85vh", display: "block", objectFit: "contain" }} />
-            </motion.div>
-          </motion.div>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <img src={previewImage} alt="Preview full size" style={{ maxWidth: "100%", maxHeight: "75vh", display: "block", objectFit: "contain", borderRadius: "8px" }} />
+          </div>
         )}
-      </AnimatePresence>
+      </Modal>
 
     </motion.div>
   );

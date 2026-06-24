@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async ({ req }) => {
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "1000");
@@ -48,13 +48,10 @@ export async function GET(req: NextRequest) {
     console.error("GET /api/leave error:", error);
     return NextResponse.json({ success: false, error: "Internal Server Error", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     if (!body.memberName || !body.date) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
@@ -85,14 +82,10 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/leave error:", error);
     return NextResponse.json({ success: false, error: "Failed to create leave", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req, session, role }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    const { resolveGangRole } = await import("@/lib/roles");
-
     const { id, ...update } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Leave ID is required" }, { status: 400 });
 
@@ -115,7 +108,7 @@ export async function PATCH(req: NextRequest) {
             action: update.status === "approved" ? "APPROVE_LEAVE" : "REJECT_LEAVE",
             details: `${actorName} ${update.status === "approved" ? "อนุมัติ" : "ปฏิเสธ"} การลางานของ ${leave.memberName}`,
             actorName: actorName || "Unknown",
-            actorRole: resolveGangRole(session.user.discordId, session.user.discordRoles),
+            actorRole: role,
             targetId: leave.id
           }
         });
@@ -159,4 +152,4 @@ export async function PATCH(req: NextRequest) {
     console.error("PATCH /api/leave error:", error);
     return NextResponse.json({ success: false, error: "Failed to update leave", details: error.message }, { status: 500 });
   }
-}
+});

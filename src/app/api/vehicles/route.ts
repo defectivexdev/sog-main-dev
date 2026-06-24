@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 
 // GET: list all vehicles
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async () => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-
     const vehicles = await prisma.gangVehicle.findMany({
       orderBy: { createdAt: "desc" }
     });
@@ -17,20 +14,11 @@ export async function GET(req: NextRequest) {
     console.error("GET /api/vehicles error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch vehicles" }, { status: 500 });
   }
-}
+});
 
 // POST: create a new vehicle (Managers only)
-export async function POST(req: NextRequest) {
+export const POST = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    
-    const { resolveGangRole, isManager } = await import("@/lib/roles");
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-    }
-
     const body = await req.json();
     if (!body.name || !body.plate) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
@@ -51,20 +39,11 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/vehicles error:", error);
     return NextResponse.json({ success: false, error: "Failed to create vehicle" }, { status: 500 });
   }
-}
+});
 
 // PATCH: update vehicle (Managers only)
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-
-    const { resolveGangRole, isManager } = await import("@/lib/roles");
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-    }
-
     const { id, ...updateData } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Vehicle ID is required" }, { status: 400 });
 
@@ -87,20 +66,11 @@ export async function PATCH(req: NextRequest) {
     console.error("PATCH /api/vehicles error:", error);
     return NextResponse.json({ success: false, error: "Failed to update vehicle" }, { status: 500 });
   }
-}
+});
 
 // DELETE: delete vehicle (Managers only)
-export async function DELETE(req: NextRequest) {
+export const DELETE = withManagerAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-
-    const { resolveGangRole, isManager } = await import("@/lib/roles");
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-    }
-
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
     if (!id) return NextResponse.json({ success: false, error: "Vehicle ID is required" }, { status: 400 });
@@ -109,9 +79,9 @@ export async function DELETE(req: NextRequest) {
       where: { id }
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: null });
   } catch (error: any) {
     console.error("DELETE /api/vehicles error:", error);
     return NextResponse.json({ success: false, error: "Failed to delete vehicle" }, { status: 500 });
   }
-}
+});

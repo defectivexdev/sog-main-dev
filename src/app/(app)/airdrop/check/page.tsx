@@ -2,8 +2,15 @@
 import { useState, useEffect } from "react";
 import { useRole } from "@/hooks/useRole";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Clock, User, CheckCircle2, Users, X as XIcon, PackageOpen, Trash2 } from "lucide-react";
+import { Gift, Clock, User, CheckCircle2, Users, PackageOpen, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useToast } from "@/hooks/useToast";
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import Modal from "@/components/ui/Modal";
+import Toast from "@/components/ui/Toast";
+import FormField from "@/components/ui/FormField";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 interface AirdropSession {
   id: string;
@@ -21,7 +28,7 @@ export default function AirdropCheckPage() {
   const [sessions, setSessions] = useState<AirdropSession[]>([]);
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [msg, setMsg] = useState("");
+  const { message, showSuccess, showError } = useToast();
   const [selectedMember, setSelectedMember] = useState<Record<string, string>>({});
   const [showCreate, setShowCreate] = useState(false);
   const [newSessionSlot, setNewSessionSlot] = useState(TIME_SLOTS[0]);
@@ -46,9 +53,8 @@ export default function AirdropCheckPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: sessionId, action: "check-in", memberName: name }),
     });
-    if (res.ok) { setMsg(`✅ เช็คชื่อ "${name}" สำเร็จ!`); refresh(); setSelectedMember(prev => ({ ...prev, [sessionId]: "" })); }
-    else setMsg("❌ เกิดข้อผิดพลาด");
-    setTimeout(() => setMsg(""), 3000);
+    if (res.ok) { showSuccess(`เช็คชื่อ "${name}" สำเร็จ!`); refresh(); setSelectedMember(prev => ({ ...prev, [sessionId]: "" })); }
+    else showError("เกิดข้อผิดพลาด");
   };
 
   const closeSession = async (sessionId: string) => {
@@ -67,9 +73,8 @@ export default function AirdropCheckPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: sessionId }),
     });
-    if (res.ok) { setMsg("✅ ลบรอบสำเร็จ!"); refresh(); }
-    else setMsg("❌ เกิดข้อผิดพลาดในการลบ");
-    setTimeout(() => setMsg(""), 3000);
+    if (res.ok) { showSuccess("ลบรอบสำเร็จ!"); refresh(); }
+    else showError("เกิดข้อผิดพลาดในการลบ");
   };
 
   const createSession = async () => {
@@ -85,9 +90,8 @@ export default function AirdropCheckPage() {
         status: "open",
       }),
     });
-    if (res.ok) { setMsg(`✅ สร้างรอบ "${sessionName}" สำเร็จ!`); refresh(); setShowCreate(false); }
-    else setMsg("❌ เกิดข้อผิดพลาด");
-    setTimeout(() => setMsg(""), 3000);
+    if (res.ok) { showSuccess(`สร้างรอบ "${sessionName}" สำเร็จ!`); refresh(); setShowCreate(false); }
+    else showError("เกิดข้อผิดพลาด");
   };
 
   const openSessions = sessions.filter((s: any) => s.status === "open");
@@ -95,76 +99,60 @@ export default function AirdropCheckPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-        <div>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <Gift size={32} color="#c9a227" /> เช็คชื่อเข้า แอร์ดรอป / ลูป
-          </h1>
-          <p className="page-subtitle">เช็คชื่อสมาชิกเข้ารับของ แอร์ดรอป / ลูป ตามรอบเวลา</p>
-        </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <span style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40`, display: "flex", alignItems: "center", gap: "8px" }}>
-            {roleIcon} {roleLabel}
-          </span>
-          {isManager && (
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-gold" onClick={() => setShowCreate(!showCreate)}>
+      <PageHeader
+        icon={Gift}
+        title="เช็คชื่อเข้า แอร์ดรอป / ลูป"
+        subtitle="เช็คชื่อสมาชิกเข้ารับของ แอร์ดรอป / ลูป ตามรอบเวลา"
+        roleBadge={<RoleBadge icon={roleIcon} label={roleLabel} color={roleColor} />}
+        actions={
+          isManager && (
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-gold" onClick={() => setShowCreate(true)}>
               + สร้างรอบ แอร์ดรอป / ลูป
             </motion.button>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
-      {msg && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "12px 16px", borderRadius: "10px", marginBottom: "16px", background: msg.startsWith("✅") ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {msg.startsWith("✅") ? <CheckCircle2 size={16} /> : <XIcon size={16} />} {msg}
-        </motion.div>
-      )}
+      <Toast message={message} />
 
-      {/* Create Session Panel */}
-      <AnimatePresence>
-        {isManager && showCreate && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="glass-card" style={{ padding: "24px", marginBottom: "24px", overflow: "hidden" }}>
-            <h3 style={{ color: "#c9a227", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <Clock size={20} /> สร้างรอบ แอร์ดรอป / ลูป ใหม่
-            </h3>
-            <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap" }}>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>วันที่</label>
-                <input type="date" className="sog-input" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)} style={{ height: "46px", width: "180px" }} />
-              </div>
-              <div>
-                <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>เลือกรอบเวลา</label>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {TIME_SLOTS.map((slot: any) => (
-                    <motion.button
-                      key={slot}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setNewSessionSlot(slot)}
-                      style={{
-                        padding: "10px 20px",
-                        borderRadius: "10px",
-                        fontSize: "0.95rem",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        border: newSessionSlot === slot ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
-                        background: newSessionSlot === slot ? "rgba(201,162,39,0.15)" : "rgba(0,0,0,0.2)",
-                        color: newSessionSlot === slot ? "#c9a227" : "#94a3b8",
-                        boxShadow: newSessionSlot === slot ? "0 0 15px rgba(201,162,39,0.2)" : "none",
-                      }}
-                    >
-                      🕐 {slot}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-gold" onClick={createSession} style={{ height: "46px", padding: "0 24px" }}>
-                สร้างรอบ
-              </motion.button>
+      {/* Create Session Modal */}
+      <Modal open={isManager && showCreate} onClose={() => setShowCreate(false)} title={<><Clock size={20} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '8px' }} color="#c9a227" />สร้างรอบ แอร์ดรอป / ลูป ใหม่</>} maxWidth="700px">
+        <div style={{ display: "flex", gap: "16px", alignItems: "flex-end", flexWrap: "wrap", marginBottom: "16px" }}>
+          <FormField label="วันที่">
+            <input type="date" className="sog-input" value={newSessionDate} onChange={e => setNewSessionDate(e.target.value)} style={{ height: "46px", width: "180px" }} />
+          </FormField>
+          
+          <FormField label="เลือกรอบเวลา">
+            <div style={{ display: "flex", gap: "8px" }}>
+              {TIME_SLOTS.map((slot: any) => (
+                <motion.button
+                  key={slot}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setNewSessionSlot(slot)}
+                  style={{
+                    padding: "10px 20px",
+                    borderRadius: "10px",
+                    fontSize: "0.95rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: newSessionSlot === slot ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
+                    background: newSessionSlot === slot ? "rgba(201,162,39,0.15)" : "rgba(0,0,0,0.2)",
+                    color: newSessionSlot === slot ? "#c9a227" : "#94a3b8",
+                    boxShadow: newSessionSlot === slot ? "0 0 15px rgba(201,162,39,0.2)" : "none",
+                  }}
+                >
+                  🕐 {slot}
+                </motion.button>
+              ))}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </FormField>
+          
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn-gold" onClick={createSession} style={{ height: "46px", padding: "0 24px", marginBottom: "16px" }}>
+            สร้างรอบ
+          </motion.button>
+        </div>
+      </Modal>
 
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: "40px" }}><p style={{ color: "#64748b" }}>กำลังโหลดข้อมูล...</p></div>
@@ -186,6 +174,7 @@ export default function AirdropCheckPage() {
                 <div>
                   <h3 style={{ color: "#e2e8f0", fontWeight: 800, fontSize: "1.2rem", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
                     <Clock size={20} color="#c9a227" /> {s.sessionName}
+                    <StatusBadge status={s.status} size="sm" />
                   </h3>
                   <p style={{ color: "#64748b", fontSize: "0.85rem", margin: "4px 0 0" }}>📅 {new Date(s.date).toLocaleDateString("th-TH")}</p>
                 </div>
@@ -318,6 +307,7 @@ export default function AirdropCheckPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <Clock size={16} color="#64748b" />
                       <p style={{ color: "#94a3b8", fontWeight: 600, margin: 0 }}>{s.sessionName}</p>
+                      <StatusBadge status={s.status} size="sm" />
                       <span style={{ color: "#475569", fontSize: "0.8rem" }}>({new Date(s.date).toLocaleDateString("th-TH")})</span>
                     </div>
                     <span style={{ color: "#64748b", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>

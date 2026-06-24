@@ -26,7 +26,8 @@ import {
   Trophy,
   User,
   History,
-  Car
+  Car,
+  Calendar
 } from "lucide-react";
 import { useRole } from "@/hooks/useRole";
 
@@ -42,7 +43,8 @@ const navSections: NavSection[] = [
   {
     title: "COMMUNICATION",
     items: [
-      { label: "ข่าวสาร (Announcements)", href: "/announcements", icon: <Bell size={18} /> }
+      { label: "ข่าวสาร (Announcements)", href: "/announcements", icon: <Bell size={18} /> },
+      { label: "ปฏิทินกิจกรรม", href: "/calendar", icon: <Calendar size={18} /> }
     ]
   },
   {

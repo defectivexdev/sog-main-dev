@@ -3,6 +3,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Clock, CalendarDays, UserX, FileText, Calendar as CalendarIcon, User, Search } from "lucide-react";
 import { useRole } from "@/hooks/useRole";
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import Toast from "@/components/ui/Toast";
+import StatusBadge from "@/components/ui/StatusBadge";
+import DataTable from "@/components/ui/DataTable";
+import FormField from "@/components/ui/FormField";
+import { useToast } from "@/hooks/useToast";
 
 interface AttendanceRecord {
   id: string; // Updated from _id
@@ -21,8 +28,7 @@ interface SummaryRecord {
   leave: number;
 }
 
-const statusMap = { present: "badge-present", absent: "badge-absent", late: "badge-late" };
-const statusLabel = { present: "มา", absent: "ขาด", late: "มาสาย" };
+
 
 const THAI_MONTHS = [
   "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -31,6 +37,7 @@ const THAI_MONTHS = [
 
 export default function AttendancePage() {
   const { isManager, roleIcon, roleLabel, roleColor } = useRole();
+  const { message, showSuccess, showError } = useToast();
   
   const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
   
@@ -39,7 +46,6 @@ export default function AttendancePage() {
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ memberName: "", date: new Date().toISOString().split("T")[0], status: "present", note: "" });
-  const [msg, setMsg] = useState("");
 
   // Monthly State
   const [summaryData, setSummaryData] = useState<SummaryRecord[]>([]);
@@ -82,12 +88,11 @@ export default function AttendancePage() {
     e.preventDefault();
     const res = await fetch("/api/attendance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     if (res.ok) {
-      setMsg("✅ บันทึกสำเร็จ!");
+      showSuccess("บันทึกสำเร็จ!");
       const d = await fetch("/api/attendance").then((r) => r.json());
       setRecords(d.data?.map((r:any) => ({...r, id: r.id || r._id})) || []);
       setForm(prev => ({...prev, memberName: "", note: ""})); // Reset form partially
-    } else setMsg("❌ เกิดข้อผิดพลาด");
-    setTimeout(() => setMsg(""), 3000);
+    } else showError("เกิดข้อผิดพลาด");
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
@@ -100,17 +105,12 @@ export default function AttendancePage() {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
-        <div>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <CalendarDays size={32} color="#c9a227" /> ระบบเช็คชื่อ
-          </h1>
-          <p className="page-subtitle">เช็คชื่อรายวันและสรุปข้อมูลประจำเดือน</p>
-        </div>
-        <span style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {roleIcon} {roleLabel}
-        </span>
-      </div>
+      <PageHeader
+        icon={CalendarDays}
+        title="ระบบเช็คชื่อ"
+        subtitle="เช็คชื่อรายวันและสรุปข้อมูลประจำเดือน"
+        roleBadge={<RoleBadge label={roleLabel} color={roleColor} icon={roleIcon} />}
+      />
 
       {/* Custom Tabs */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "16px" }}>
@@ -140,11 +140,7 @@ export default function AttendancePage() {
         </button>
       </div>
 
-      {msg && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "12px 16px", borderRadius: "10px", marginBottom: "24px", background: msg.startsWith("✅") ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}` }}>
-          {msg}
-        </motion.div>
-      )}
+      <Toast message={message} />
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
@@ -158,19 +154,16 @@ export default function AttendancePage() {
                   <User size={18} /> บันทึกการเช็คชื่อ
                 </h3>
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  <div>
-                    <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>ชื่อสมาชิก *</label>
+                  <FormField label="ชื่อสมาชิก" required>
                     <select className="sog-input" value={form.memberName} onChange={(e) => setForm({ ...form, memberName: e.target.value })} required>
                       <option value="">— เลือกสมาชิก —</option>
                       {members.map((m) => (<option key={m.id} value={m.name}>{m.name}</option>))}
                     </select>
-                  </div>
-                  <div>
-                    <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>วันที่ *</label>
+                  </FormField>
+                  <FormField label="วันที่" required>
                     <input type="date" className="sog-input" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
-                  </div>
-                  <div>
-                    <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>สถานะ *</label>
+                  </FormField>
+                  <FormField label="สถานะ" required>
                     <div style={{ display: "flex", gap: "10px" }}>
                       {[
                         { val: "present", icon: "✅", label: "มา", color: "#34d399", bg: "rgba(52,211,153,0.1)" },
@@ -183,11 +176,10 @@ export default function AttendancePage() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                  <div>
-                    <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "block", marginBottom: "6px", fontWeight: 600 }}>หมายเหตุ</label>
+                  </FormField>
+                  <FormField label="หมายเหตุ">
                     <input className="sog-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="เช่น รถติด, ป่วย (ถ้ามี)" />
-                  </div>
+                  </FormField>
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" style={{ marginTop: "8px", padding: "12px" }}>
                     บันทึกข้อมูล
                   </motion.button>
@@ -227,22 +219,17 @@ export default function AttendancePage() {
               </div>
 
               {loading ? <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>กำลังโหลด...</div> : (
-                <div style={{ overflowX: "auto" }}>
-                  <table className="sog-table">
-                    <thead><tr><th>ชื่อสมาชิก</th><th>วันที่</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead>
-                    <tbody>
-                      {records.length === 0 ? <tr><td colSpan={4} style={{ textAlign: "center", color: "#64748b", padding: "32px" }}>ยังไม่มีประวัติการเช็คชื่อ</td></tr>
-                      : records.slice(0,50).map((r) => (
-                        <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <td style={{ fontWeight: 600 }}>{r.memberName}</td>
-                          <td style={{ color: "#94a3b8" }}>{new Date(r.date).toLocaleDateString("th-TH")}</td>
-                          <td><span className={statusMap[r.status]} style={{ padding: "6px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 700 }}>{statusLabel[r.status]}</span></td>
-                          <td style={{ color: "#64748b", fontSize: "0.85rem" }}>{r.note || "—"}</td>
-                        </motion.tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  data={records.slice(0, 50)}
+                  keyExtractor={(item) => item.id}
+                  emptyText="ยังไม่มีประวัติการเช็คชื่อ"
+                  columns={[
+                    { header: "ชื่อสมาชิก", accessor: "memberName", render: (r) => <span style={{ fontWeight: 600 }}>{r.memberName}</span> },
+                    { header: "วันที่", accessor: "date", render: (r) => <span style={{ color: "#94a3b8" }}>{new Date(r.date).toLocaleDateString("th-TH")}</span> },
+                    { header: "สถานะ", accessor: "status", render: (r) => <StatusBadge status={r.status} size="sm" /> },
+                    { header: "หมายเหตุ", accessor: "note", render: (r) => <span style={{ color: "#64748b", fontSize: "0.85rem" }}>{r.note || "—"}</span> }
+                  ]}
+                />
               )}
             </div>
           </motion.div>
@@ -282,57 +269,40 @@ export default function AttendancePage() {
 
             {/* Summary Table */}
             {summaryLoading ? <div style={{ padding: "60px", textAlign: "center", color: "#64748b" }}>กำลังประมวลผลข้อมูล...</div> : (
-              <div style={{ overflowX: "auto" }}>
-                <table className="sog-table" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
-                  <thead>
-                    <tr>
-                      <th style={{ padding: "16px", background: "rgba(0,0,0,0.3)" }}>ชื่อ IC Name</th>
-                      <th style={{ padding: "16px", background: "rgba(52,211,153,0.1)", color: "#34d399", textAlign: "center" }}>มาปกติ (วัน)</th>
-                      <th style={{ padding: "16px", background: "rgba(251,191,36,0.1)", color: "#fbbf24", textAlign: "center" }}>มาสาย (วัน)</th>
-                      <th style={{ padding: "16px", background: "rgba(248,113,113,0.1)", color: "#f87171", textAlign: "center" }}>ขาด (วัน)</th>
-                      <th style={{ padding: "16px", background: "rgba(167,139,250,0.1)", color: "#a78bfa", textAlign: "center" }}>ลา (วัน)</th>
-                      <th style={{ padding: "16px", background: "rgba(0,0,0,0.3)", textAlign: "center" }}>หมายเหตุ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSummary.length === 0 ? <tr><td colSpan={6} style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>ไม่มีข้อมูลในเดือนนี้</td></tr>
-                    : filteredSummary.map((s: any, i: any) => {
-                      const isWarning = s.absent >= 3 || (s.late + s.absent >= 5);
-                      
-                      return (
-                        <motion.tr 
-                          key={s.name} 
-                          initial={{ opacity: 0, y: 10 }} 
-                          animate={{ opacity: 1, y: 0 }} 
-                          transition={{ delay: i * 0.05 }}
-                          style={{ 
-                            background: isWarning ? "rgba(248,113,113,0.05)" : "rgba(255,255,255,0.02)",
-                            boxShadow: isWarning ? "inset 2px 0 0 #f87171" : "none"
-                          }}
-                        >
-                          <td style={{ padding: "16px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(201,162,39,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#c9a227", fontSize: "0.8rem" }}>
-                              {s.name.substring(0, 2).toUpperCase()}
-                            </div>
-                            {s.name}
-                            {s.role === "leader" && <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "rgba(201,162,39,0.1)", color: "#c9a227", borderRadius: "4px", border: "1px solid rgba(201,162,39,0.2)" }}>หัวหน้า</span>}
-                            {s.role === "admin" && <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "rgba(167,139,250,0.1)", color: "#a78bfa", borderRadius: "4px", border: "1px solid rgba(167,139,250,0.2)" }}>รอง</span>}
-                          </td>
-                          <td style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: s.present > 0 ? "#e2e8f0" : "#475569" }}>{s.present}</td>
-                          <td style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: s.late > 0 ? "#fbbf24" : "#475569" }}>{s.late}</td>
-                          <td style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: s.absent > 0 ? "#f87171" : "#475569" }}>{s.absent}</td>
-                          <td style={{ padding: "16px", textAlign: "center", fontWeight: 700, color: s.leave > 0 ? "#a78bfa" : "#475569" }}>{s.leave}</td>
-                          <td style={{ padding: "16px", textAlign: "center" }}>
-                            {s.absent >= 3 ? <span style={{ color: "#f87171", fontSize: "0.75rem", fontWeight: 700, background: "rgba(248,113,113,0.1)", padding: "4px 8px", borderRadius: "12px" }}>⚠️ ขาดบ่อย</span> : 
-                             (s.late >= 3 ? <span style={{ color: "#fbbf24", fontSize: "0.75rem", fontWeight: 700, background: "rgba(251,191,36,0.1)", padding: "4px 8px", borderRadius: "12px" }}>⚠️ สายบ่อย</span> : 
-                             <span style={{ color: "#34d399", fontSize: "0.75rem" }}>—</span>)}
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={filteredSummary}
+                keyExtractor={(item) => item.name}
+                emptyText="ไม่มีข้อมูลในเดือนนี้"
+                columns={[
+                  { 
+                    header: "ชื่อ IC Name", 
+                    accessor: "name", 
+                    render: (s) => (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700 }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(201,162,39,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#c9a227", fontSize: "0.8rem" }}>
+                          {s.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        {s.name}
+                        {s.role === "leader" && <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "rgba(201,162,39,0.1)", color: "#c9a227", borderRadius: "4px", border: "1px solid rgba(201,162,39,0.2)" }}>หัวหน้า</span>}
+                        {s.role === "admin" && <span style={{ fontSize: "0.7rem", padding: "2px 6px", background: "rgba(167,139,250,0.1)", color: "#a78bfa", borderRadius: "4px", border: "1px solid rgba(167,139,250,0.2)" }}>รอง</span>}
+                      </div>
+                    ) 
+                  },
+                  { header: "มาปกติ (วัน)", accessor: "present", align: "center", render: (s) => <span style={{ fontWeight: 700, color: s.present > 0 ? "#e2e8f0" : "#475569" }}>{s.present}</span> },
+                  { header: "มาสาย (วัน)", accessor: "late", align: "center", render: (s) => <span style={{ fontWeight: 700, color: s.late > 0 ? "#fbbf24" : "#475569" }}>{s.late}</span> },
+                  { header: "ขาด (วัน)", accessor: "absent", align: "center", render: (s) => <span style={{ fontWeight: 700, color: s.absent > 0 ? "#f87171" : "#475569" }}>{s.absent}</span> },
+                  { header: "ลา (วัน)", accessor: "leave", align: "center", render: (s) => <span style={{ fontWeight: 700, color: s.leave > 0 ? "#a78bfa" : "#475569" }}>{s.leave}</span> },
+                  { 
+                    header: "หมายเหตุ", 
+                    align: "center", 
+                    render: (s) => (
+                      s.absent >= 3 ? <span style={{ color: "#f87171", fontSize: "0.75rem", fontWeight: 700, background: "rgba(248,113,113,0.1)", padding: "4px 8px", borderRadius: "12px" }}>⚠️ ขาดบ่อย</span> : 
+                      (s.late >= 3 ? <span style={{ color: "#fbbf24", fontSize: "0.75rem", fontWeight: 700, background: "rgba(251,191,36,0.1)", padding: "4px 8px", borderRadius: "12px" }}>⚠️ สายบ่อย</span> : 
+                      <span style={{ color: "#34d399", fontSize: "0.75rem" }}>—</span>)
+                    ) 
+                  }
+                ]}
+              />
             )}
           </motion.div>
         )}

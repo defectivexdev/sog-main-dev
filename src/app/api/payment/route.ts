@@ -1,41 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { withAuth, withManagerAuth } from "@/lib/apiAuth";
 import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
-import { resolveGangRole, isManager } from "@/lib/roles";
 import { rateLimit } from "@/lib/rateLimit";
 
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async ({ req }) => {
   try {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "1000");
     const page = parseInt(searchParams.get("page") || "1");
     
-    const [data, total] = await Promise.all([
+    const [data, total, incomeSumRaw, expenseSumRaw] = await Promise.all([
       prisma.payment.findMany({ 
         orderBy: { date: 'desc' },
         take: limit,
         skip: (page - 1) * limit 
       }),
-      prisma.payment.count()
+      prisma.payment.count(),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { type: "income", status: "confirmed" } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { type: "expense", status: "confirmed" } })
     ]);
     
+    const totalIn = incomeSumRaw._sum.amount || 0;
+    const totalOut = expenseSumRaw._sum.amount || 0;
+
     return NextResponse.json({ 
       success: true, 
       data,
+      totals: { totalIn, totalOut, balance: totalIn - totalOut },
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
     });
   } catch (error: any) {
     console.error("GET /api/payment error:", error);
     return NextResponse.json({ success: false, error: "Internal Server Error", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async ({ req }) => {
   try {
-    const session = await auth();
-    if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-
     const ip = req.headers.get("x-forwarded-for") || "unknown";
     if (!rateLimit(ip, 5, 60000)) { // 5 requests per minute per IP
       return NextResponse.json({ success: false, error: "ส่งคำขอเร็วเกินไป กรุณารอสักครู่ (Rate Limit Exceeded)" }, { status: 429 });
@@ -71,15 +73,10 @@ export async function POST(req: NextRequest) {
     console.error("POST /api/payment error:", error);
     return NextResponse.json({ success: false, error: "Failed to create payment", details: error.message }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withManagerAuth(async ({ req, session, role }) => {
   try {
-    const session = await auth();
-    if (!session?.user?.discordId) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    const role = resolveGangRole(session.user.discordId, session.user.discordRoles);
-    if (!isManager(role)) return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
-
     const { id, ...update } = await req.json();
     if (!id) return NextResponse.json({ success: false, error: "Payment ID is required" }, { status: 400 });
 
@@ -97,7 +94,7 @@ export async function PATCH(req: NextRequest) {
             action: update.status === "confirmed" ? "APPROVE_PAYMENT" : "REJECT_PAYMENT",
             details: `${actorName} ${update.status === "confirmed" ? "อนุมัติ" : "ปฏิเสธ"} การ${payment.type === "income" ? "นำส่งเงิน" : "เบิกเงิน"} จำนวน ฿${payment.amount} ของ ${payment.memberName}`,
             actorName: actorName || "Unknown",
-            actorRole: resolveGangRole(session.user.discordId, session.user.discordRoles),
+            actorRole: role,
             targetId: payment.id
           }
         });
@@ -139,4 +136,4 @@ export async function PATCH(req: NextRequest) {
     console.error("PATCH /api/payment error:", error);
     return NextResponse.json({ success: false, error: "Failed to update payment", details: error.message }, { status: 500 });
   }
-}
+});

@@ -14,12 +14,6 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function ProfilePage() {
   const { data, mutate, isLoading } = useSWR('/api/profile/stats', fetcher);
   const { roleIcon, roleLabel, roleColor } = useRole();
-
-  const [editMode, setEditMode] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-
-
   if (isLoading) {
     return (
       <div className="p-8">
@@ -40,16 +34,6 @@ export default function ProfilePage() {
   }
 
   const { member, stats } = data;
-
-  const handleSave = async () => {
-    setSaving(true);
-    // Future editable fields can be saved here
-    setTimeout(() => {
-      setEditMode(false);
-      setSaving(false);
-      toast.success("บันทึกข้อมูลเรียบร้อย");
-    }, 500);
-  };
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "20px" }}>

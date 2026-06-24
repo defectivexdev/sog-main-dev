@@ -1,18 +1,29 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRole } from "@/hooks/useRole";
-import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, ArrowUpRight, ArrowDownRight, User, Image as ImageIcon, Calendar, CheckCircle2, Clock, Check, Download, X } from "lucide-react";
+import { useToast } from "@/hooks/useToast";
+import { motion } from "framer-motion";
+import { Wallet, ArrowUpRight, ArrowDownRight, User, Calendar, Check, Download } from "lucide-react";
+import useSWR from "swr";
 
-interface Payment { _id: string; memberName: string; amount: number; type: string; description?: string; image?: string; date: string; status: string; confirmedBy?: string; }
-
-import useSWR from 'swr';
+import PageHeader from "@/components/ui/PageHeader";
+import RoleBadge from "@/components/ui/RoleBadge";
+import Toast from "@/components/ui/Toast";
+import Pagination from "@/components/ui/Pagination";
+import StatusBadge from "@/components/ui/StatusBadge";
+import FormField from "@/components/ui/FormField";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function PaymentPage() {
   const { isManager, roleIcon, roleLabel, roleColor, user } = useRole();
-  const { data: payData, mutate: refreshPayments, isLoading: payLoading } = useSWR('/api/payment', fetcher);
+  const { message, showSuccess, showError } = useToast();
+  
+  const [activeTab, setActiveTab] = useState<"income" | "expense">("income");
+  const [page, setPage] = useState(1);
+  const limit = 20;
+
+  const { data: payData, mutate: refreshPayments, isLoading: payLoading } = useSWR(`/api/payment?page=${page}&limit=${limit}&type=${activeTab}`, fetcher);
   const { data: memData, isLoading: memLoading } = useSWR('/api/members', fetcher);
   
   const rawPayments = payData?.data || payData || [];
@@ -23,16 +34,14 @@ export default function PaymentPage() {
   const members = membersList.map((m: any) => ({ id: m.id, name: m.icName || m.name }));
   const loading = payLoading || memLoading;
   
-  const [form, setForm] = useState({ memberName: "", amount: 0, image: "", date: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ memberName: "", amount: 0, description: "", image: "", date: new Date().toISOString().split("T")[0] });
   const [file, setFile] = useState<File | null>(null);
-  const [msg, setMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
-    setMsg("⏳ กำลังบันทึกข้อมูล...");
     
     let uploadedUrl = "";
     if (file) {
@@ -43,23 +52,29 @@ export default function PaymentPage() {
         const { url } = await uploadRes.json();
         uploadedUrl = url;
       } else {
-        setMsg("❌ อัปโหลดรูปภาพล้มเหลว");
-        setTimeout(() => setMsg(""), 4000);
+        showError("❌ อัปโหลดรูปภาพล้มเหลว");
+        setSubmitting(false);
         return;
       }
     }
 
-    const payload = { ...form, type: "income", image: uploadedUrl, memberName: form.memberName || (user?.icName || user?.name) };
+    const payload = { 
+      ...form, 
+      type: activeTab, 
+      image: uploadedUrl, 
+      memberName: form.memberName || (user?.icName || user?.name) 
+    };
+    
     const res = await fetch("/api/payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (res.ok) { 
-      setMsg("✅ บันทึกการส่งเงินสำเร็จ!"); 
-      setForm({ memberName: "", amount: 0, image: "", date: new Date().toISOString().split("T")[0] }); 
+      showSuccess(activeTab === "income" ? "✅ บันทึกการส่งเงินสำเร็จ!" : "✅ บันทึกการเบิกจ่ายสำเร็จ!"); 
+      setForm({ memberName: "", amount: 0, description: "", image: "", date: new Date().toISOString().split("T")[0] }); 
       setFile(null);
       refreshPayments(); 
+    } else {
+      showError("❌ เกิดข้อผิดพลาด");
     }
-    else setMsg("❌ เกิดข้อผิดพลาด");
     setSubmitting(false);
-    setTimeout(() => setMsg(""), 4000);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,21 +90,19 @@ export default function PaymentPage() {
     refreshPayments();
   };
 
-  const total = payments.filter((p: any) => p.status === "confirmed").reduce((acc: any, p: any) => acc + (p.type === "income" ? p.amount : -p.amount), 0);
-  const totalIn = payments.filter((p: any) => p.type === "income" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
-  const totalOut = payments.filter((p: any) => p.type === "expense" && p.status === "confirmed").reduce((acc: any, p: any) => acc + p.amount, 0);
-
-  const displayPayments = payments.filter((p: any) => p.type === "income");
+  const total = payData?.totals?.balance || 0;
+  const totalIn = payData?.totals?.totalIn || 0;
+  const totalOut = payData?.totals?.totalOut || 0;
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-        <div>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px", margin: 0 }}>
-            <Wallet size={32} color="#c9a227" /> ระบบบัญชีแก๊งค์
-          </h1>
-          {isManager && (
+      <PageHeader
+        icon={Wallet}
+        title="ระบบบัญชีแก๊งค์"
+        subtitle="จัดการการเงินและการโอนของสมาชิกแก๊งค์ SOG"
+        roleBadge={<RoleBadge icon={roleIcon} label={roleLabel} color={roleColor} />}
+        actions={
+          isManager ? (
             <a 
               href="/api/payment/export" 
               target="_blank"
@@ -101,14 +114,9 @@ export default function PaymentPage() {
             >
               <Download size={16} /> รายงาน (CSV)
             </a>
-          )}
-        </div>
-          <p className="page-subtitle">จัดการการเงินและการโอนของสมาชิกแก๊งค์ SOG</p>
-        </div>
-        <span style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: 700, color: roleColor, background: `${roleColor}18`, border: `1px solid ${roleColor}40`, display: "flex", alignItems: "center", gap: "8px" }}>
-          {roleIcon} {roleLabel}
-        </span>
-      </div>
+          ) : undefined
+        }
+      />
 
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px", marginBottom: "28px" }}>
@@ -137,74 +145,96 @@ export default function PaymentPage() {
         </motion.div>
       </div>
 
+      <div style={{ marginBottom: "24px", display: "flex", gap: "12px" }}>
+        <button 
+          onClick={() => { setActiveTab("income"); setPage(1); }}
+          style={{ 
+            padding: "10px 20px", borderRadius: "12px", fontWeight: 700, 
+            background: activeTab === "income" ? "rgba(52, 211, 153, 0.2)" : "rgba(255, 255, 255, 0.05)",
+            color: activeTab === "income" ? "#34d399" : "#94a3b8",
+            border: `1px solid ${activeTab === "income" ? "rgba(52, 211, 153, 0.4)" : "rgba(255, 255, 255, 0.1)"}`,
+            cursor: "pointer"
+          }}
+        >
+          รายรับ (Income)
+        </button>
+        <button 
+          onClick={() => { setActiveTab("expense"); setPage(1); }}
+          style={{ 
+            padding: "10px 20px", borderRadius: "12px", fontWeight: 700, 
+            background: activeTab === "expense" ? "rgba(248, 113, 113, 0.2)" : "rgba(255, 255, 255, 0.05)",
+            color: activeTab === "expense" ? "#f87171" : "#94a3b8",
+            border: `1px solid ${activeTab === "expense" ? "rgba(248, 113, 113, 0.4)" : "rgba(255, 255, 255, 0.1)"}`,
+            cursor: "pointer"
+          }}
+        >
+          รายจ่าย (Expense)
+        </button>
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "24px" }}>
         {/* Form */}
         <div className="glass-card" style={{ padding: "28px" }}>
-          <h3 style={{ color: "#c9a227", fontWeight: 800, marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "1.2rem" }}>
-            <Wallet size={20} /> บันทึกการโอนเงินใหม่
+          <h3 style={{ color: activeTab === "income" ? "#34d399" : "#f87171", fontWeight: 800, marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "1.2rem" }}>
+            <Wallet size={20} /> {activeTab === "income" ? "บันทึกการรับเงิน" : "บันทึกการเบิกจ่าย"}
           </h3>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", fontWeight: 600 }}><User size={14}/> ชื่อสมาชิก *</label>
-              <select className="sog-input" value={form.memberName} onChange={e => setForm(f => ({ ...f, memberName: e.target.value }))} required style={{ height: "46px" }}>
+            <FormField label="ชื่อสมาชิก" required>
+              <select className="sog-input" value={form.memberName} onChange={e => setForm(f => ({ ...f, memberName: e.target.value }))} required style={{ height: "46px", width: "100%" }}>
                 <option value="">— เลือกสมาชิก —</option>
                 <option value={user?.icName || user?.name || ""}>👤 ตัวคุณเอง ({user?.icName || user?.name})</option>
                 {members.filter((m: any) => m.name !== (user?.icName || user?.name)).map((m: any) => (
                   <option key={m.id} value={m.name}>{m.name}</option>
                 ))}
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", fontWeight: 600 }}><Wallet size={14}/> จำนวนเงิน (บาท) *</label>
-              <input type="number" className="sog-input" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} min={1} required style={{ height: "46px", fontSize: "1.1rem" }} placeholder="0" />
-            </div>
+            <FormField label="จำนวนเงิน (บาท)" required>
+              <input type="number" className="sog-input" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} min={1} required style={{ height: "46px", fontSize: "1.1rem", width: "100%" }} placeholder="0" />
+            </FormField>
 
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", fontWeight: 600 }}><ImageIcon size={14}/> แนบรูปภาพ (ภาพถ่าย/สกรีนช็อต) *</label>
-              <input type="file" accept="image/*" onChange={handleImageChange} required className="sog-input" style={{ height: "46px", padding: "10px" }} />
+            {activeTab === "expense" && (
+              <FormField label="รายละเอียด / เหตุผลที่เบิก" required>
+                <input type="text" className="sog-input" value={form.description || ""} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} required style={{ height: "46px", width: "100%" }} placeholder="เช่น ซื้อของแต่งรถ, ค่าปรับ" />
+              </FormField>
+            )}
+
+            <FormField label="แนบรูปภาพ (ภาพถ่าย/สกรีนช็อต)" required>
+              <input type="file" accept="image/*" onChange={handleImageChange} required className="sog-input" style={{ height: "46px", padding: "10px", width: "100%" }} />
               {form.image && (
                 <div style={{ marginTop: "12px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "200px", display: "flex", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
                   <img src={form.image} alt="Preview" style={{ maxHeight: "200px", objectFit: "contain" }} loading="lazy" />
                 </div>
               )}
-            </div>
+            </FormField>
 
-            <div>
-              <label style={{ color: "#94a3b8", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", fontWeight: 600 }}><Calendar size={14}/> วันที่ทำรายการ</label>
-              <input type="date" className="sog-input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required style={{ height: "46px" }} />
-            </div>
+            <FormField label="วันที่ทำรายการ">
+              <input type="date" className="sog-input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required style={{ height: "46px", width: "100%" }} />
+            </FormField>
 
-            <motion.button disabled={submitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" style={{ height: "46px", marginTop: "8px", fontSize: "1rem", fontWeight: 700, opacity: submitting ? 0.7 : 1 }}>
+            <motion.button disabled={submitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" style={{ height: "46px", marginTop: "8px", fontSize: "1rem", fontWeight: 700, opacity: submitting ? 0.7 : 1, width: "100%" }}>
               {submitting ? "กำลังบันทึก..." : "บันทึกรายการ"}
             </motion.button>
-            
-            {msg && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "12px", borderRadius: "8px", background: msg.startsWith("✅") ? "rgba(52,211,153,0.1)" : "rgba(248,113,113,0.1)", color: msg.startsWith("✅") ? "#34d399" : "#f87171", border: `1px solid ${msg.startsWith("✅") ? "rgba(52,211,153,0.2)" : "rgba(248,113,113,0.2)"}`, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>
-                {msg.startsWith("✅") ? <CheckCircle2 size={16} /> : <X size={16} />}
-                {msg.replace("✅", "").replace("❌", "")}
-              </motion.div>
-            )}
           </form>
         </div>
 
         {/* Table / List */}
         <div className="glass-card" style={{ padding: "28px", overflowY: "auto", maxHeight: "800px" }}>
           <h3 style={{ color: "#e2e8f0", fontWeight: 800, marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "1.2rem" }}>
-            <Calendar size={20} color="#a5b4fc" /> ประวัติการทำรายการล่าสุด
+            <Calendar size={20} color="#a5b4fc" /> ประวัติการทำรายการล่าสุด ({activeTab === "income" ? "รายรับ" : "รายจ่าย"})
           </h3>
           
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", padding: "40px" }}><p style={{ color: "#64748b" }}>กำลังโหลดข้อมูล...</p></div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {displayPayments.length === 0 ? (
+              {payments.length === 0 ? (
                 <div style={{ padding: "40px", textAlign: "center", background: "rgba(0,0,0,0.2)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
                   <Wallet size={32} color="#475569" style={{ margin: "0 auto 12px" }} />
                   <p style={{ color: "#64748b", margin: 0 }}>ยังไม่มีรายการบัญชี</p>
                 </div>
-              ) : displayPayments.map((p: any, i: number) => (
+              ) : payments.map((p: any, i: number) => (
                 <motion.div
                   key={p._id}
                   initial={{ opacity: 0, x: 20 }}
@@ -228,25 +258,16 @@ export default function PaymentPage() {
                       <span style={{ color: p.type === "income" ? "#34d399" : "#f87171", fontWeight: 800, fontSize: "1.1rem" }}>
                         {p.type === "income" ? "+" : "-"}฿{p.amount.toLocaleString()}
                       </span>
-                      <span style={{
-                        padding: "4px 10px",
-                        borderRadius: "20px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        color: p.status === "confirmed" ? "#34d399" : "#fbbf24",
-                        background: p.status === "confirmed" ? "rgba(52,211,153,0.1)" : "rgba(245,158,11,0.1)",
-                        border: `1px solid ${p.status === "confirmed" ? "rgba(52,211,153,0.3)" : "rgba(245,158,11,0.3)"}`
-                      }}>
-                        {p.status === "confirmed" ? <CheckCircle2 size={12} /> : <Clock size={12} />}
-                        {p.status === "confirmed" ? "ยืนยันแล้ว" : "รอยืนยัน"}
-                      </span>
+                      <StatusBadge status={p.status} size="sm" />
                     </div>
                     <p style={{ color: "#e2e8f0", fontSize: "0.95rem", margin: "0 0 6px", fontWeight: 500, display: "flex", alignItems: "center", gap: "6px" }}>
                       <User size={14} color="#94a3b8" /> {p.memberName}
                     </p>
+                    {p.description && (
+                      <p style={{ color: "#a5b4fc", fontSize: "0.85rem", margin: "0 0 6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        📝 {p.description}
+                      </p>
+                    )}
                     <p style={{ color: "#64748b", fontSize: "0.8rem", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                       <Calendar size={12} /> {new Date(p.date).toLocaleDateString("th-TH")}
                     </p>
@@ -286,10 +307,17 @@ export default function PaymentPage() {
                   )}
                 </motion.div>
               ))}
+
+              {payData?.pagination && payData.pagination.totalPages > 1 && (
+                <div style={{ marginTop: "24px" }}>
+                  <Pagination page={page} totalPages={payData.pagination.totalPages} onPageChange={setPage} />
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+      <Toast message={message} />
     </motion.div>
   );
 }
