@@ -54,7 +54,7 @@ function MembersContent() {
       setLoading(false);
       const initMemberId = searchParams?.get("memberId");
       if (initMemberId) {
-        const found = mapped.find((m: any) => m.id === initMemberId);
+        const found = mapped.find((m: any) => m.id === initMemberId || m.discordId === initMemberId);
         if (found) {
           // fetch stats and history, then open modal
           fetch(`/api/profile/stats?discordId=${found.discordId || found.id}`).then(r => r.json()).then(s => setProfileStats(s));
@@ -86,6 +86,7 @@ function MembersContent() {
 
   const openProfile = async (member: Member) => {
     setSelectedMember(member);
+    window.history.pushState(null, '', `?memberId=${member.discordId || member.id}`);
     setLoadingProfile(true);
     try {
       const res = await fetch(`/api/members/${member.id}`);
@@ -102,6 +103,7 @@ function MembersContent() {
 
   const closeProfile = () => {
     setSelectedMember(null);
+    window.history.pushState(null, '', '/members');
     setProfileStats(null);
     setProfileHistory([]);
   };
