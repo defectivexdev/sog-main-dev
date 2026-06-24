@@ -89,12 +89,13 @@ function MembersContent() {
     window.history.pushState(null, '', `?memberId=${member.discordId || member.id}`);
     setLoadingProfile(true);
     try {
-      const res = await fetch(`/api/members/${member.id}`);
-      const d = await res.json();
-      if (d.data) {
-        setProfileStats(d.data.stats);
-        setProfileHistory(d.data.history);
-      }
+      const statsRes = await fetch(`/api/profile/stats?discordId=${member.discordId || member.id}`);
+      const statsData = await statsRes.json();
+      setProfileStats(statsData);
+
+      const histRes = await fetch(`/api/profile/history?discordId=${member.discordId || member.id}`);
+      const histData = await histRes.json();
+      setProfileHistory(histData.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -246,7 +247,7 @@ function MembersContent() {
                             <div style={{ background: "rgba(201,162,39,0.15)", padding: "6px", borderRadius: "8px", display: "flex" }}><Wallet size={14} color="#fbbf24" /></div>
                             <div>
                               <div style={{ color: "#a18228", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>ยอดส่งคลังรวม</div>
-                              <div style={{ color: "#fbbf24", fontSize: "0.9rem", fontWeight: 800 }}>฿{profileStats.totalDonated.toLocaleString()}</div>
+                              <div style={{ color: "#fbbf24", fontSize: "0.9rem", fontWeight: 800 }}>฿{(profileStats.totalDonated || 0).toLocaleString()}</div>
                             </div>
                           </div>
                           
