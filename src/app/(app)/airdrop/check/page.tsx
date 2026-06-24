@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRole } from "@/hooks/useRole";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gift, Clock, User, CheckCircle2, Users, X as XIcon, PackageOpen } from "lucide-react";
+import { Gift, Clock, User, CheckCircle2, Users, X as XIcon, PackageOpen, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 interface AirdropSession {
@@ -58,6 +58,18 @@ export default function AirdropCheckPage() {
       body: JSON.stringify({ id: sessionId, status: "closed" }),
     });
     refresh();
+  };
+
+  const deleteSession = async (sessionId: string) => {
+    if (!confirm("ยืนยันการลบรอบแอร์ดรอปนี้? ข้อมูลการเช็คชื่อทั้งหมดในรอบนี้จะหายไป")) return;
+    const res = await fetch("/api/airdrop", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: sessionId }),
+    });
+    if (res.ok) { setMsg("✅ ลบรอบสำเร็จ!"); refresh(); }
+    else setMsg("❌ เกิดข้อผิดพลาดในการลบ");
+    setTimeout(() => setMsg(""), 3000);
   };
 
   const createSession = async () => {
@@ -308,8 +320,28 @@ export default function AirdropCheckPage() {
                       <p style={{ color: "#94a3b8", fontWeight: 600, margin: 0 }}>{s.sessionName}</p>
                       <span style={{ color: "#475569", fontSize: "0.8rem" }}>({new Date(s.date).toLocaleDateString("th-TH")})</span>
                     </div>
-                    <span style={{ color: "#64748b", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <Users size={14} /> {s.checkedMembers.length} คน
+                    <span style={{ color: "#64748b", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><Users size={14} /> {s.checkedMembers.length} คน</span>
+                      {isManager && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => deleteSession(s.id)}
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "#f87171",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "4px"
+                          }}
+                          title="ลบรอบแอร์ดรอป"
+                        >
+                          <Trash2 size={16} />
+                        </motion.button>
+                      )}
                     </span>
                   </div>
 
