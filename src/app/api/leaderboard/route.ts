@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
+export const revalidate = 60; // Cache for 60 seconds globally
+
 export async function GET() {
   try {
     // 1. Top Attendance

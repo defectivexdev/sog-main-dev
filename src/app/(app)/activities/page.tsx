@@ -49,14 +49,26 @@ export default function ActivitiesPage() {
     const name = customName || (user?.icName || user?.name) || "";
     if (!name) return;
     const isJoined = participants.includes(name);
+
+    // Optimistic UI Update (ทายใจอัปเดตหน้าจอก่อน API ตอบกลับ)
+    setActivities(prev => prev.map(act => {
+      // API might return .id or ._id depending on how it was fetched
+      const actId = (act as any).id || act._id;
+      if (actId === id) {
+        const newParticipants = isJoined ? act.participants.filter(p => p !== name) : [...act.participants, name];
+        return { ...act, participants: newParticipants };
+      }
+      return act;
+    }));
+
     const res = await fetch("/api/activities", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, action: isJoined ? "leave" : "join", memberName: name }) });
     
     if (res.ok) {
-      toast.success(isJoined ? `ถอนตัวจากกิจกรรมเรียบร้อย` : `เข้าร่วมกิจกรรมเรียบร้อย`);
+      toast.success(isJoined ? `ถอนตัวเรียบร้อย` : `เข้าร่วมเรียบร้อย`);
       if (customName) setCustomNames(prev => ({ ...prev, [id]: "" }));
-      refresh();
     } else {
       toast.error("เกิดข้อผิดพลาด");
+      refresh(); // Rollback on error
     }
   };
 

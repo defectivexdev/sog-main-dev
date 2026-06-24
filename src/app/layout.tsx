@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import SessionWrapper from "@/components/SessionWrapper";
+import { SWRProvider } from "@/components/SWRProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -48,7 +49,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             className: 'sog-toast'
           }} 
         />
-        <SessionWrapper>{children}</SessionWrapper>
+        <SessionWrapper>
+          <SWRProvider>{children}</SWRProvider>
+        </SessionWrapper>
       </body>
     </html>
   );
