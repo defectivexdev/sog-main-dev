@@ -25,7 +25,8 @@ import {
   Bell,
   Trophy,
   User,
-  History
+  History,
+  Car
 } from "lucide-react";
 import { useRole } from "@/hooks/useRole";
 
@@ -77,6 +78,7 @@ const navSections: NavSection[] = [
       { label: "ของร้าน", href: "/store", icon: <Store size={18} /> },
       { label: "ส่งเงินแก๊งค์", href: "/payment", icon: <DollarSign size={18} /> },
       { label: "ถอนเงินแก๊งค์", href: "/withdraw", icon: <HandCoins size={18} />, managerOnly: true },
+      { label: "รถแก๊งค์", href: "/vehicles", icon: <Car size={18} /> },
     ],
   },
   {

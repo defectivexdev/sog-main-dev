@@ -225,3 +225,17 @@ model AuditLog {
   @@index([action])
   @@index([actorName])
 }
+
+model GangVehicle {
+  id         String   @id @default(cuid())
+  name       String
+  plate      String
+  quantity   Int      @default(1)
+  assignedTo String?
+  status     String   @default("available")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status])
+  @@index([assignedTo])
+}
