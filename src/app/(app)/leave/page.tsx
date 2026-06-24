@@ -42,6 +42,7 @@ export default function LeavePage() {
   const [selectedLeaveId, setSelectedLeaveId] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const refresh = () => {
     setLoading(true);
@@ -259,9 +260,9 @@ export default function LeavePage() {
                             {r.reason}
                             {r.imageUrl && (
                               <div style={{ marginTop: "8px" }}>
-                                <a href={r.imageUrl} target="_blank" rel="noopener noreferrer">
-                                  <img src={r.imageUrl} alt="Attachment" style={{ maxWidth: "100px", maxHeight: "100px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }} />
-                                </a>
+                                <button type="button" onClick={() => setPreviewImage(r.imageUrl!)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.2)", padding: "4px 10px", borderRadius: "16px", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s" }} className="hover-text-white hover-bg-glass">
+                                  <ImagePlus size={14} /> ดูรูปแนบ
+                                </button>
                               </div>
                             )}
                             {r.status === "rejected" && r.rejectReason && (
@@ -325,10 +326,10 @@ export default function LeavePage() {
                           <strong style={{ color: "#e2e8f0" }}>เหตุผล:</strong> {r.reason}
                         </p>
                         {r.imageUrl && (
-                          <div style={{ marginTop: "12px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", display: "inline-block" }}>
-                            <a href={r.imageUrl} target="_blank" rel="noopener noreferrer">
-                              <img src={r.imageUrl} alt="Leave Attachment" style={{ maxWidth: "200px", maxHeight: "150px", display: "block", objectFit: "cover", cursor: "pointer" }} />
-                            </a>
+                          <div style={{ marginTop: "12px", borderRadius: "8px", overflow: "hidden", display: "inline-block" }}>
+                            <button type="button" onClick={() => setPreviewImage(r.imageUrl!)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(148,163,184,0.1)", color: "#e2e8f0", border: "1px solid rgba(148,163,184,0.2)", padding: "6px 12px", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer", transition: "all 0.2s" }} className="hover-bg-glass">
+                              <ImagePlus size={16} /> ดูรูปหลักฐาน
+                            </button>
                           </div>
                         )}
                       </div>
@@ -377,6 +378,18 @@ export default function LeavePage() {
                   ยกเลิก
                 </motion.button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }} onClick={() => setPreviewImage(null)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }} onClick={e => e.stopPropagation()}>
+              <button type="button" onClick={() => setPreviewImage(null)} style={{ position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.5)", color: "#fff", border: "none", borderRadius: "50%", padding: "8px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}><X size={20} /></button>
+              <img src={previewImage} alt="Preview full size" style={{ maxWidth: "100%", maxHeight: "85vh", display: "block", objectFit: "contain" }} />
             </motion.div>
           </motion.div>
         )}
