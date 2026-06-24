@@ -11,6 +11,7 @@ export function useRole() {
   return {
     gangRole,
     isManager: isManager(gangRole),
+    isAdmin: gangRole === "admin",
     isLeader: gangRole === "leader",
     isViceLeader: gangRole === "vice_leader",
     isMember: gangRole === "member",

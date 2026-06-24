@@ -28,8 +28,8 @@ interface ProfileStats {
   requisitionsCount: number;
 }
 
-const roleLabel: Record<string, string> = { leader: "หัวหน้า", vice_leader: "รองหัวหน้า", admin: "ผู้จัดการ", member: "สมาชิก" };
-const roleColor: Record<string, string> = { leader: "#c9a227", vice_leader: "#a78bfa", admin: "#a78bfa", member: "#94a3b8" };
+const roleLabel: Record<string, string> = { admin: "แอดมิน", leader: "หัวหน้า", vice_leader: "รองหัวหน้า", member: "สมาชิก" };
+const roleColor: Record<string, string> = { admin: "#f43f5e", leader: "#c9a227", vice_leader: "#a78bfa", member: "#94a3b8" };
 
 function MembersContent() {
   const { isManager } = useRole();

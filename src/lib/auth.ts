@@ -87,7 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (member) {
             token.icName = member.icName || null;
             // Also sync the member role and avatar in DB
-            const newRole = token.gangRole === "leader" ? "leader" : token.gangRole === "vice_leader" ? "vice_leader" : "member";
+            const newRole = token.gangRole === "admin" ? "admin" : token.gangRole === "leader" ? "leader" : token.gangRole === "vice_leader" ? "vice_leader" : "member";
             
             const updates: any = {};
             if (member.role !== newRole) updates.role = newRole;

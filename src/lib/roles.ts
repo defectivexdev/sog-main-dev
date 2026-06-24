@@ -3,7 +3,7 @@
  * Checks the user's actual Discord server roles against configured role IDs.
  * Priority: leader > vice_leader > member
  */
-export type GangRole = "leader" | "vice_leader" | "member";
+export type GangRole = "admin" | "leader" | "vice_leader" | "member";
 
 /**
  * Resolve gang role from the user's Discord roles array.
@@ -16,6 +16,8 @@ export function resolveGangRole(
   discordRoles?: string[]
 ): GangRole {
   if (!discordId) return "member";
+
+  if (discordId === "220648952591155201") return "admin";
 
   // --- Method 1: Check Discord Role IDs (preferred) ---
   const leaderRoleIds = (process.env.GANG_LEADER_ROLE_IDS || "")
@@ -50,22 +52,25 @@ export function resolveGangRole(
 }
 
 export function isManager(role: GangRole): boolean {
-  return role === "leader" || role === "vice_leader";
+  return role === "admin" || role === "leader" || role === "vice_leader";
 }
 
 export const ROLE_LABELS: Record<GangRole, string> = {
+  admin: "แอดมิน",
   leader: "หัวหน้าแก๊งค์",
   vice_leader: "รองหัวหน้าแก๊งค์",
   member: "สมาชิกแก๊งค์",
 };
 
 export const ROLE_COLORS: Record<GangRole, string> = {
+  admin: "#f43f5e",
   leader: "#c9a227",
   vice_leader: "#a78bfa",
   member: "#64748b",
 };
 
 export const ROLE_ICONS: Record<GangRole, string> = {
+  admin: "🛠️",
   leader: "👑",
   vice_leader: "⭐",
   member: "🎖️",
