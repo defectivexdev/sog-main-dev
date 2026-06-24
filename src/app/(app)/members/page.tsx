@@ -284,9 +284,9 @@ function MembersContent() {
                         <div style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginBottom: "4px" }}>ลางานทั้งหมด</div>
                         <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{profileStats.leaveCount} <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "#64748b" }}>ครั้ง</span></div>
                       </div>
-                      <div style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", borderRadius: "12px", padding: "16px" }}>
+                      <div style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", borderRadius: "12px", padding: "16px", gridColumn: "1 / -1" }}>
                         <div style={{ color: "#fbbf24", fontSize: "0.8rem", fontWeight: 700, marginBottom: "4px" }}>ส่งเงินเข้าคลัง</div>
-                        <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>฿{profileStats.totalDonated.toLocaleString()}</div>
+                        <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>฿{(profileStats.totalDonated || 0).toLocaleString()}</div>
                       </div>
                       <div style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)", borderRadius: "12px", padding: "16px" }}>
                         <div style={{ color: "#a78bfa", fontSize: "0.8rem", fontWeight: 700, marginBottom: "4px" }}>เบิกของทั้งหมด</div>
