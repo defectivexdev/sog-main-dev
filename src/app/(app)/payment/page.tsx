@@ -26,9 +26,12 @@ export default function PaymentPage() {
   const [form, setForm] = useState({ memberName: "", amount: 0, image: "", date: new Date().toISOString().split("T")[0] });
   const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     setMsg("⏳ กำลังบันทึกข้อมูล...");
     
     let uploadedUrl = "";
@@ -55,6 +58,7 @@ export default function PaymentPage() {
       refreshPayments(); 
     }
     else setMsg("❌ เกิดข้อผิดพลาด");
+    setSubmitting(false);
     setTimeout(() => setMsg(""), 4000);
   };
 
@@ -172,8 +176,8 @@ export default function PaymentPage() {
               <input type="date" className="sog-input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required style={{ height: "46px" }} />
             </div>
 
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" style={{ height: "46px", marginTop: "8px", fontSize: "1rem", fontWeight: 700 }}>
-              บันทึกรายการ
+            <motion.button disabled={submitting} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="btn-gold" style={{ height: "46px", marginTop: "8px", fontSize: "1rem", fontWeight: 700, opacity: submitting ? 0.7 : 1 }}>
+              {submitting ? "กำลังบันทึก..." : "บันทึกรายการ"}
             </motion.button>
             
             {msg && (
