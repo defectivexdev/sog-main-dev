@@ -172,9 +172,10 @@ export default function PaymentPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: (activeTab === "expense" && !isManager) ? "1fr" : "1fr 2fr", gap: "24px" }}>
         {/* Form */}
-        <div className="glass-card" style={{ padding: "28px" }}>
+        {(activeTab === "income" || isManager) && (
+          <div className="glass-card" style={{ padding: "28px" }}>
           <h3 style={{ color: activeTab === "income" ? "#34d399" : "#f87171", fontWeight: 800, marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "1.2rem" }}>
             <Wallet size={20} /> {activeTab === "income" ? "บันทึกการรับเงิน" : "บันทึกการเบิกจ่าย"}
           </h3>
@@ -218,6 +219,7 @@ export default function PaymentPage() {
             </motion.button>
           </form>
         </div>
+        )}
 
         {/* Table / List */}
         <div className="glass-card" style={{ padding: "28px", overflowY: "auto", maxHeight: "800px" }}>
