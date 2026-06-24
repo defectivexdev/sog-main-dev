@@ -75,6 +75,7 @@ model Airdrop {
   checkedMembers String[] // Array of member names or IC names
   status         String   @default("open")
   createdBy      String?
+  discordMessageId String? // Used to edit the bot message
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -90,6 +91,7 @@ model Attendance {
   status     String
   note       String?
   recordedBy String?
+  discordMessageId String? // Used to edit the bot message
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

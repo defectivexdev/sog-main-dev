@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { sendDiscordWebhook } from "@/lib/discordWebhook";
+import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
 export async function GET(req: NextRequest) {
   try {
@@ -69,16 +69,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Discord Webhook
-    const webhookUrl = process.env.DISCORD_WEBHOOK_LEAVE;
-    
-    if (webhookUrl) {
-      await sendDiscordWebhook(webhookUrl, {
-        title: "🛎️ แจ้งลาใหม่",
-        description: `**ผู้แจ้ง:** \`${body.memberName}\`\n**ระยะเวลา:** \`${new Date(body.date).toLocaleDateString("th-TH")}\` ถึง \`${body.endDate ? new Date(body.endDate).toLocaleDateString("th-TH") : "-"}\`\n\n**เหตุผลการลา:**\n\`\`\`\n${body.reason || "-"}\n\`\`\``,
-        color: 0xffaa00, // Golden/Orange color
-      });
-    }
+    // Discord Bot Message
+    const embed: DiscordEmbed = {
+      title: "🛎️ แจ้งลาใหม่",
+      description: `**ผู้แจ้ง:** \`${body.memberName}\`\n**ระยะเวลา:** \`${new Date(body.date).toLocaleDateString("th-TH")}\` ถึง \`${body.endDate ? new Date(body.endDate).toLocaleDateString("th-TH") : "-"}\`\n\n**เหตุผลการลา:**\n\`\`\`\n${body.reason || "-"}\n\`\`\``,
+      color: 0xffaa00,
+      timestamp: new Date().toISOString()
+    };
+    await sendDiscordMessage(CHANNELS.LEAVE, [embed]);
 
     return NextResponse.json({ success: true, data: leave }, { status: 201 });
   } catch (error: any) {
@@ -133,6 +131,17 @@ export async function PATCH(req: NextRequest) {
           }
         });
       }
+      }
+
+      // Update discord log
+      const embed: DiscordEmbed = {
+        title: update.status === "approved" ? "✅ อนุมัติการลางาน" : "❌ ปฏิเสธการลางาน",
+        description: `การลางานของ **${leave.memberName}**\n**ผลการพิจารณา:** ${update.status === "approved" ? "อนุมัติ" : "ไม่อนุมัติ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ''}`,
+        color: update.status === "approved" ? 0x34d399 : 0xf87171,
+        footer: { text: `ตรวจสอบโดย: ${actorName}` },
+        timestamp: new Date().toISOString()
+      };
+      await sendDiscordMessage(CHANNELS.LEAVE, [embed]);
     }
 
     return NextResponse.json({ success: true, data: leave });

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { sendDiscordWebhook } from "@/lib/discordWebhook";
+import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 import { resolveGangRole, isManager } from "@/lib/roles";
 import { rateLimit } from "@/lib/rateLimit";
 
@@ -55,18 +55,16 @@ export async function POST(req: NextRequest) {
       date: body.date ? new Date(body.date) : new Date(),
     } });
 
-    // Discord Webhook
-    const webhookUrl = process.env.DISCORD_WEBHOOK_PAYMENT;
-    
-    if (webhookUrl) {
-      const isIncome = payment.type === "income";
-      await sendDiscordWebhook(webhookUrl, {
-        title: isIncome ? "💰 นำส่งเงินเข้าคลัง" : "💸 เบิกเงินจากคลัง",
-        description: `**ผู้ทำรายการ:** \`${payment.memberName}\`\n**จำนวนเงิน:** \`฿${payment.amount.toLocaleString()}\`\n\n**หมายเหตุ:**\n\`\`\`\n${payment.description || "-"}\n\`\`\``,
-        color: isIncome ? 0x34d399 : 0xf87171, // Green for income, Red for expense
-        imageUrl: payment.image || undefined,
-      });
-    }
+    // Discord Bot Message
+    const isIncome = payment.type === "income";
+    const embed: DiscordEmbed = {
+      title: isIncome ? "💰 นำส่งเงินเข้าคลัง" : "💸 เบิกเงินจากคลัง",
+      description: `**ผู้ทำรายการ:** \`${payment.memberName}\`\n**จำนวนเงิน:** \`฿${payment.amount.toLocaleString()}\`\n\n**หมายเหตุ:**\n\`\`\`\n${payment.description || "-"}\n\`\`\``,
+      color: isIncome ? 0x34d399 : 0xf87171,
+      image: payment.image ? { url: payment.image } : undefined,
+      timestamp: new Date().toISOString()
+    };
+    await sendDiscordMessage(CHANNELS.PAYMENT, [embed]);
 
     return NextResponse.json({ success: true, data: payment }, { status: 201 });
   } catch (error: any) {
@@ -123,6 +121,17 @@ export async function PATCH(req: NextRequest) {
           }
         });
       }
+
+      // Send to Discord
+      const isIncome = payment.type === "income";
+      const embed: DiscordEmbed = {
+        title: update.status === "confirmed" ? (isIncome ? "✅ ยืนยันรับเงิน" : "✅ ยืนยันจ่ายเงิน") : "❌ ปฏิเสธรายการบัญชี",
+        description: `รายการของ **${payment.memberName}** จำนวน **฿${payment.amount.toLocaleString()}**\n${update.status === "confirmed" ? "ได้รับการยืนยันแล้ว" : "ถูกปฏิเสธ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ""}`,
+        color: update.status === "confirmed" ? 0x34d399 : 0xf87171,
+        footer: { text: `ตรวจสอบโดย: ${actorName}` },
+        timestamp: new Date().toISOString()
+      };
+      await sendDiscordMessage(CHANNELS.PAYMENT, [embed]);
     }
 
     return NextResponse.json({ success: true, data: payment });

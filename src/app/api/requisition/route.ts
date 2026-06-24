@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { resolveGangRole, isManager } from "@/lib/roles";
+import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
 export async function GET() {
   try {
@@ -34,6 +35,17 @@ export async function POST(req: NextRequest) {
         imageUrl: body.imageUrl,
       } 
     });
+
+    // Send Discord message
+    const embed: DiscordEmbed = {
+      title: "📦 แจ้งขอเบิกของใหม่",
+      description: `**ผู้เบิก:** \`${req_.memberName}\`\n**ไอเทม:** \`${req_.itemName}\`\n**จำนวน:** \`${req_.quantity} ${req_.unit}\`\n\n**เหตุผล:**\n\`\`\`\n${req_.reason || "-"}\n\`\`\``,
+      color: 0xc9a227,
+      image: req_.imageUrl ? { url: req_.imageUrl } : undefined,
+      timestamp: new Date().toISOString()
+    };
+    await sendDiscordMessage(CHANNELS.REQUISITION, [embed]);
+
     return NextResponse.json({ data: req_ }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/requisition error:", error);
@@ -90,6 +102,16 @@ export async function PATCH(req: NextRequest) {
       } catch (e) {
         console.error("Failed to create notification", e);
       }
+
+      // Send to Discord
+      const embed: DiscordEmbed = {
+        title: update.status === "approved" ? "✅ อนุมัติการเบิกของ" : "❌ ปฏิเสธการเบิกของ",
+        description: `รายการขอเบิก **${rec.itemName} (${rec.quantity} ${rec.unit})** ของ **${rec.memberName}**\n${update.status === "approved" ? "ได้รับการอนุมัติแล้ว" : "ถูกปฏิเสธ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ""}`,
+        color: update.status === "approved" ? 0x34d399 : 0xf87171,
+        footer: { text: `ตรวจสอบโดย: ${actorName}` },
+        timestamp: new Date().toISOString()
+      };
+      await sendDiscordMessage(CHANNELS.REQUISITION, [embed]);
     }
 
     return NextResponse.json({ data: rec });

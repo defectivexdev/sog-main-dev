@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { resolveGangRole, isManager } from "@/lib/roles";
 import { rateLimit } from "@/lib/rateLimit";
+import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
 export async function GET() {
   try {
@@ -22,6 +23,17 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const activity = await prisma.activity.create({ data: { ...body, createdBy: (session.user.icName || session.user.name) } });
+
+    // Send Discord message
+    const embed: DiscordEmbed = {
+      title: "🎮 กิจกรรมใหม่",
+      description: `**${activity.name}**\n${activity.description ? `*${activity.description}*\n` : ""}\n**วันที่:** ${new Date(activity.date).toLocaleString("th-TH")}\n**สถานที่:** ${activity.location || "ไม่ระบุ"}\n**จำนวนคนสูงสุด:** ${activity.maxParticipants || "ไม่จำกัด"}`,
+      color: 0x3b82f6,
+      footer: { text: `สร้างโดย: ${activity.createdBy}` },
+      timestamp: new Date().toISOString()
+    };
+    await sendDiscordMessage(CHANNELS.ACTIVITIES, [embed]);
+
     return NextResponse.json({ data: activity }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Server Error" }, { status: 500 });

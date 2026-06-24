@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { resolveGangRole, isManager } from "@/lib/roles";
-import { sendDiscordWebhook } from "@/lib/discordWebhook";
+import { sendDiscordMessage, editDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,15 +44,18 @@ export async function POST(req: NextRequest) {
 
     const airdrop = await prisma.airdrop.create({ data: { ...body, createdBy: (session.user.icName || session.user.name) } });
 
-    // Discord Webhook
-    const webhookUrl = process.env.DISCORD_WEBHOOK_AIRDROP;
+    // Discord Bot Message
+    const embed: DiscordEmbed = {
+      title: "📦 แจ้งเตือน Airdrop!",
+      description: `**หัวข้อ:** \`${body.sessionName}\`\n**เวลาเปิด:** \`${new Date(body.date).toLocaleString("th-TH")}\`\n\n**สร้างโดย:** \`${session.user.icName || session.user.name}\`\n\n**ผู้เข้าร่วม (0):**\nยังไม่มีผู้เข้าร่วม\n\n\`\`\`เตรียมตัวให้พร้อม ลูกแก๊งค์ทุกคน!\`\`\``,
+      color: 0x60a5fa, // Blue
+      timestamp: new Date().toISOString()
+    };
     
-    if (webhookUrl) {
-      await sendDiscordWebhook(webhookUrl, {
-        title: "📦 แจ้งเตือน Airdrop!",
-        description: `**หัวข้อ:** \`${body.sessionName}\`\n**เวลาเปิด:** \`${new Date(body.date).toLocaleString("th-TH")}\`\n\n**สร้างโดย:** \`${session.user.icName || session.user.name}\`\n\n\`\`\`เตรียมตัวให้พร้อม ลูกแก๊งค์ทุกคน!\`\`\``,
-        color: 0x60a5fa, // Blue color
-      });
+    const msgId = await sendDiscordMessage(CHANNELS.AIRDROP_ATTENDANCE, [embed]);
+    if (msgId) {
+      await prisma.airdrop.update({ where: { id: airdrop.id }, data: { discordMessageId: msgId } });
+      airdrop.discordMessageId = msgId;
     }
 
     return NextResponse.json({ success: true, data: airdrop }, { status: 201 });
@@ -73,7 +76,21 @@ export async function PATCH(req: NextRequest) {
     if (action === "check-in") {
       // Any member can check themselves in
       if (!memberName) return NextResponse.json({ success: false, error: "Member name is required for check-in" }, { status: 400 });
+      const current = await prisma.airdrop.findUnique({ where: { id } });
       const airdrop = await prisma.airdrop.update({ where: { id }, data: { checkedMembers: { push: memberName } } });
+      
+      // Update discord message if exists
+      if (current && current.discordMessageId) {
+        const newMembers = [...current.checkedMembers, memberName];
+        const embed: DiscordEmbed = {
+          title: "📦 แจ้งเตือน Airdrop! (กำลังเข้าร่วม)",
+          description: `**หัวข้อ:** \`${current.sessionName}\`\n**เวลาเปิด:** \`${new Date(current.date).toLocaleString("th-TH")}\`\n\n**ผู้เข้าร่วม (${newMembers.length}):**\n${newMembers.map(m => `✅ ${m}`).join("\n")}\n\n\`\`\`เตรียมตัวให้พร้อม ลูกแก๊งค์ทุกคน!\`\`\``,
+          color: 0x60a5fa,
+          timestamp: new Date().toISOString()
+        };
+        await editDiscordMessage(CHANNELS.AIRDROP_ATTENDANCE, current.discordMessageId, [embed]);
+      }
+      
       return NextResponse.json({ success: true, data: airdrop });
     }
 
