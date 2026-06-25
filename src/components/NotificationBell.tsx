@@ -42,11 +42,12 @@ export default function NotificationBell() {
           <motion.div 
             initial={{ scale: 0 }} animate={{ scale: 1 }}
             style={{ 
-              position: "absolute", top: "-2px", right: "-2px", 
-              background: "#ef4444", color: "white", fontSize: "0.7rem", fontWeight: "bold",
-              width: "18px", height: "18px", borderRadius: "50%", 
+              position: "absolute", top: "-4px", right: "-4px", 
+              background: "#ef4444", color: "white", fontSize: "0.75rem", fontWeight: "bold",
+              width: "22px", height: "22px", borderRadius: "50%", 
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 10px rgba(239, 68, 68, 0.5)"
+              border: "2px solid #0f1629", // Matches sidebar/navbar background
+              boxShadow: "0 0 10px rgba(239, 68, 68, 0.4)"
             }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
