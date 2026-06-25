@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import NotificationBell from "./NotificationBell";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -490,9 +489,6 @@ export default function Navbar() {
                 >
                   {roleIcon} {roleLabel}
                 </p>
-              </div>
-              <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-                <NotificationBell />
               </div>
             </motion.div>
           )}
