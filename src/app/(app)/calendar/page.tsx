@@ -148,7 +148,13 @@ export default function CalendarPage() {
     // Actual days
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      const dayEvents = events.filter(e => e.startDate.startsWith(dateStr));
+      
+      const dayEvents = events.filter(e => {
+        const localDate = new Date(e.startDate);
+        const localDateStr = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
+        return localDateStr === dateStr;
+      });
+
       const isToday = dateStr === todayStr;
 
       days.push(

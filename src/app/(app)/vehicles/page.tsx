@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRole } from "@/hooks/useRole";
-import { Car, Plus, Edit2, Trash2, X, Search, ShieldCheck, CheckCircle2, User, Key, XCircle } from "lucide-react";
+import { Car, Plus, Edit2, Trash2, X, Search, ShieldCheck, CheckCircle2, User, Key, XCircle, Info } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import RoleBadge from "@/components/ui/RoleBadge";
 import Toast from "@/components/ui/Toast";
@@ -160,6 +160,17 @@ export default function VehiclesPage() {
           </div>
         }
       />
+
+      {/* Info Banner */}
+      <div style={{ background: "rgba(52, 211, 153, 0.1)", border: "1px solid rgba(52, 211, 153, 0.2)", borderRadius: "12px", padding: "16px", marginBottom: "24px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        <div style={{ color: "#34d399", marginTop: "2px" }}><Info size={20} /></div>
+        <div>
+          <h4 style={{ margin: "0 0 4px 0", color: "#34d399", fontWeight: 700 }}>ประกาศสำคัญ (Notice)</h4>
+          <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.95rem", lineHeight: 1.5 }}>
+            ถ้าอยากได้รถแรงขับทำงานดำ ให้ไปซื้อ <strong>บัตรเทรดรถมา 30,000</strong> จากร้านค้า แล้วติดต่อคนขับรถ เพื่อขอเทรดกุญแจ
+          </p>
+        </div>
+      </div>
 
       {/* Vehicle Grid */}
       {loading ? (
