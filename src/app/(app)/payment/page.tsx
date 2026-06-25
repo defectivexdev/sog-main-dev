@@ -62,7 +62,7 @@ export default function PaymentPage() {
       ...form, 
       type: activeTab, 
       image: uploadedUrl, 
-      description: activeTab === "income" ? `ฝากเงินแก๊งค์ (${form.days} วัน)` : form.description,
+      description: activeTab === "income" ? `ฝากเงินแก๊งค์ (${form.days} วัน)${form.description ? ` - ${form.description}` : ''}` : form.description,
       memberName: form.memberName || (user?.icName || user?.name) 
     };
     
@@ -213,6 +213,12 @@ export default function PaymentPage() {
             <FormField label={activeTab === "income" ? "จำนวนเงินรวม (บาท)" : "จำนวนเงิน (บาท)"} required>
               <input type="number" className="sog-input" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} min={1} required style={{ height: "46px", fontSize: "1.1rem", width: "100%", background: activeTab === "income" ? "rgba(0,0,0,0.2)" : "transparent" }} placeholder="0" readOnly={activeTab === "income"} />
             </FormField>
+
+            {activeTab === "income" && (
+              <FormField label="หมายเหตุเพิ่มเติม (ถ้ามี)">
+                <input type="text" className="sog-input" value={form.description || ""} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} style={{ height: "46px", width: "100%" }} placeholder="เช่น จ่ายล่วงหน้าของเดือนหน้า, สมทบทุน" />
+              </FormField>
+            )}
 
             {activeTab === "expense" && (
               <FormField label="รายละเอียด / เหตุผลที่เบิก" required>
