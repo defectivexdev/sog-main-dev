@@ -12,9 +12,12 @@ async function fetchDiscordAvatar(discordId: string): Promise<string | null> {
     if (!res.ok) return null;
     const data = await res.json();
     if (data.avatar) {
-      // Use dynamic extension based on avatar hash (animated avatars start with a_)
       const ext = data.avatar.startsWith('a_') ? 'gif' : 'png';
       return `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.${ext}?size=256`;
+    } else if (data.id) {
+      // Handle default avatar
+      const defaultAvatarIndex = (BigInt(data.id) >> 22n) % 6n;
+      return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
     }
   } catch (e) {
     console.error("Failed to fetch discord avatar", e);
@@ -65,6 +68,28 @@ export const POST = withManagerAuth(async ({ req }) => {
     return NextResponse.json({ success: false, error: "Failed to create member", details: error.message }, { status: 500 });
   }
 });
+
+// Added sync-avatars endpoint to help sync all missing avatars
+export const PUT = async (req: NextRequest) => {
+  try {
+    const members = await prisma.member.findMany({ 
+      where: { avatar: null, discordId: { not: null } } 
+    });
+    let updated = 0;
+    for (const m of members) {
+      if (m.discordId) {
+        const url = await fetchDiscordAvatar(m.discordId);
+        if (url) {
+          await prisma.member.update({ where: { id: m.id }, data: { avatar: url } });
+          updated++;
+        }
+      }
+    }
+    return NextResponse.json({ success: true, message: `Synced ${updated} avatars` });
+  } catch (e) {
+    return NextResponse.json({ success: false, error: String(e) }, { status: 500 });
+  }
+};
 
 export const PATCH = withManagerAuth(async ({ req }) => {
   try {

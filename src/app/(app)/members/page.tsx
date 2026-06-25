@@ -127,9 +127,26 @@ function MembersContent() {
         subtitle="ข้อมูลและสถิติของสมาชิกทั้งหมดในแก๊งค์ SOG"
         actions={
           isManager && (
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", borderRadius: "12px", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#c9a227", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-              {showForm ? "ยกเลิก" : <><Plus size={18} /> เพิ่มสมาชิกใหม่</>}
-            </motion.button>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={async () => {
+                showSuccess("กำลังซิงค์รูปภาพ...");
+                try {
+                  const res = await fetch("/api/members", { method: "PUT" });
+                  const data = await res.json();
+                  if (data.success) {
+                    showSuccess(`ซิงค์รูปภาพสำเร็จแล้ว! (${data.message})`);
+                    setTimeout(() => window.location.reload(), 1500);
+                  }
+                } catch (e) {
+                  showError("เกิดข้อผิดพลาด");
+                }
+              }} style={{ padding: "10px 20px", borderRadius: "12px", background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)", color: "#34d399", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <Activity size={18} /> ซิงค์รูปโปรไฟล์
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", borderRadius: "12px", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#c9a227", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                {showForm ? "ยกเลิก" : <><Plus size={18} /> เพิ่มสมาชิกใหม่</>}
+              </motion.button>
+            </div>
           )
         }
       />
@@ -297,26 +314,7 @@ function MembersContent() {
                     </div>
                   </div>
 
-                  <h3 style={{ color: "#e2e8f0", fontSize: "1rem", margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}><ClipboardList size={18} color="#c9a227" /> ประวัติล่าสุด (5 รายการ)</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {profileHistory.length === 0 ? (
-                      <div style={{ textAlign: "center", color: "#64748b", padding: "20px", background: "rgba(255,255,255,0.02)", borderRadius: "10px" }}>ยังไม่มีประวัติการทำรายการ</div>
-                    ) : (
-                      profileHistory.map((h: any, i: any) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", background: "rgba(0,0,0,0.3)", borderRadius: "10px" }}>
-                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: h.type === "payment" ? "rgba(16,185,129,0.2)" : h.type === "leave" ? "rgba(248,113,113,0.2)" : "rgba(139,92,246,0.2)", color: h.type === "payment" ? "#34d399" : h.type === "leave" ? "#f87171" : "#a78bfa", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            {h.type === "payment" ? <DollarSign size={16} /> : h.type === "leave" ? <ClipboardList size={16} /> : <PackageCheck size={16} />}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ color: "#e2e8f0", fontSize: "0.9rem", fontWeight: 600 }}>{h.title}</div>
-                            <div style={{ color: "#64748b", fontSize: "0.75rem" }}>{new Date(h.date).toLocaleDateString("th-TH", { day: 'numeric', month: 'short', year: '2-digit' })}</div>
-                          </div>
-                          <div style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "10px", background: "rgba(255,255,255,0.1)", color: "#94a3b8" }}>{h.status}</div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </>
+
               ) : null}
             </div>
           </div>
