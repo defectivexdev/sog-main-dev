@@ -10,8 +10,12 @@ export default async function DashboardPage() {
   const session = await auth();
   const displayName = session?.user?.icName || session?.user?.name?.split(" ")[0] || "สมาชิก";
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const bkkOffset = 7 * 60; // 7 hours in minutes
+  const localOffset = now.getTimezoneOffset();
+  const bkkTime = new Date(now.getTime() + (bkkOffset + localOffset) * 60000);
+  bkkTime.setHours(0, 0, 0, 0);
+  const today = new Date(bkkTime.getTime() - (bkkOffset + localOffset) * 60000);
   
   const sevenDaysAgo = new Date(today);
   sevenDaysAgo.setDate(today.getDate() - 6);
