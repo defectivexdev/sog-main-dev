@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import nacl from "tweetnacl";
+import { verifyKey } from "discord-interactions";
 import prisma from "@/lib/db";
 
 // Discord sends interactions via POST
@@ -20,11 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isVerified = nacl.sign.detached.verify(
-      Buffer.from(timestamp + bodyText),
-      Buffer.from(signature, "hex"),
-      Buffer.from(PUBLIC_KEY, "hex")
-    );
+    const isVerified = verifyKey(bodyText, signature, timestamp, PUBLIC_KEY);
 
     if (!isVerified) {
       return NextResponse.json({ error: "Invalid request signature" }, { status: 401 });
