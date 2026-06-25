@@ -8,23 +8,27 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const member = await prisma.member.findUnique({ where: { id } });
     if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const memberName = member.name;
+    const possibleNames = [member.name];
+    if (member.icName && member.icName !== member.name) {
+      possibleNames.push(member.icName);
+    }
+    const whereClause = { memberName: { in: possibleNames } };
 
     const [attendances, leaves, payments, requisitions] = await Promise.all([
-      prisma.attendance.count({ where: { memberName } }),
-      prisma.leave.count({ where: { memberName, status: "approved" } }),
+      prisma.attendance.count({ where: whereClause }),
+      prisma.leave.count({ where: { ...whereClause, status: "approved" } }),
       prisma.payment.aggregate({ 
-        where: { memberName, type: "income", status: "confirmed" },
+        where: { ...whereClause, type: "income", status: "confirmed" },
         _sum: { amount: true }
       }),
-      prisma.requisition.count({ where: { memberName, status: "delivered" } })
+      prisma.requisition.count({ where: { ...whereClause, status: "delivered" } })
     ]);
 
     // Fetch latest 3 activities for history
     const recentHistoryRaw = await Promise.all([
-      prisma.leave.findMany({ where: { memberName }, take: 3, orderBy: { createdAt: 'desc' } }),
-      prisma.payment.findMany({ where: { memberName }, take: 3, orderBy: { createdAt: 'desc' } }),
-      prisma.requisition.findMany({ where: { memberName }, take: 3, orderBy: { createdAt: 'desc' } })
+      prisma.leave.findMany({ where: whereClause, take: 3, orderBy: { createdAt: 'desc' } }),
+      prisma.payment.findMany({ where: whereClause, take: 3, orderBy: { createdAt: 'desc' } }),
+      prisma.requisition.findMany({ where: whereClause, take: 3, orderBy: { createdAt: 'desc' } })
     ]);
 
     let history: any[] = [];
