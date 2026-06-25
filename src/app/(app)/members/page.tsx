@@ -313,8 +313,7 @@ function MembersContent() {
                       <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{profileStats.requisitionsCount} <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "#64748b" }}>ครั้ง</span></div>
                     </div>
                   </div>
-
-
+                </>
               ) : null}
             </div>
           </div>
