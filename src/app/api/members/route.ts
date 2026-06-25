@@ -16,7 +16,7 @@ async function fetchDiscordAvatar(discordId: string): Promise<string | null> {
       return `https://cdn.discordapp.com/avatars/${discordId}/${data.avatar}.${ext}?size=256`;
     } else if (data.id) {
       // Handle default avatar
-      const defaultAvatarIndex = (BigInt(data.id) >> 22n) % 6n;
+      const defaultAvatarIndex = (BigInt(data.id) >> BigInt(22)) % BigInt(6);
       return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarIndex}.png`;
     }
   } catch (e) {
