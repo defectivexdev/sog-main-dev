@@ -81,6 +81,11 @@ export const PATCH = withManagerAuth(async ({ req, session, role }) => {
     if (!id) return NextResponse.json({ success: false, error: "Payment ID is required" }, { status: 400 });
 
     const actorName = session.user.icName || session.user.name;
+
+    const existingPayment = await prisma.payment.findUnique({ where: { id: id } });
+    if (!existingPayment) return NextResponse.json({ success: false, error: "Payment not found" }, { status: 404 });
+    if (existingPayment.status !== "pending") return NextResponse.json({ success: false, error: "Payment already processed" }, { status: 400 });
+
     const payment = await prisma.payment.update({
       where: { id: id },
       data: { ...update, confirmedBy: actorName }

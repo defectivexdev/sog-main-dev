@@ -88,26 +88,30 @@ export default function NotificationBell() {
                   </div>
                 ) : (
                   notifications.map((n: any) => (
-                    <div 
+                    <motion.div 
                       key={n.id} 
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
                       onClick={() => !n.isRead && markAsRead(n.id)}
                       style={{ 
-                        padding: "12px", borderRadius: "8px", marginBottom: "4px",
-                        background: n.isRead ? "transparent" : "rgba(201, 162, 39, 0.05)",
-                        borderLeft: n.isRead ? "3px solid transparent" : "3px solid #c9a227",
+                        padding: "14px", borderRadius: "12px", marginBottom: "10px",
+                        background: n.isRead ? "rgba(255,255,255,0.03)" : "rgba(201, 162, 39, 0.1)",
+                        border: n.isRead ? "1px solid rgba(255,255,255,0.05)" : "1px solid rgba(201, 162, 39, 0.3)",
                         cursor: n.isRead ? "default" : "pointer",
-                        transition: "background 0.2s"
+                        transition: "all 0.2s ease"
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                        <span style={{ color: n.isRead ? "#cbd5e1" : "#f8fafc", fontSize: "0.85rem", fontWeight: n.isRead ? 500 : 700 }}>{n.title}</span>
-                        {!n.isRead && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+                        <span style={{ color: n.isRead ? "#cbd5e1" : "#f8fafc", fontSize: "0.9rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+                          {n.title}
+                        </span>
+                        {!n.isRead && <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", flexShrink: 0, marginTop: "6px", boxShadow: "0 0 8px #ef4444" }} />}
                       </div>
-                      <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.75rem", lineHeight: "1.4" }}>{n.message}</p>
-                      <span style={{ display: "block", marginTop: "6px", color: "#64748b", fontSize: "0.65rem" }}>
+                      <p style={{ margin: 0, color: n.isRead ? "#64748b" : "#94a3b8", fontSize: "0.8rem", lineHeight: "1.5" }}>{n.message}</p>
+                      <span style={{ display: "block", marginTop: "10px", color: "#475569", fontSize: "0.7rem", fontWeight: 600 }}>
                         {new Date(n.createdAt).toLocaleDateString("th-TH", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} น.
                       </span>
-                    </div>
+                    </motion.div>
                   ))
                 )}
               </div>
