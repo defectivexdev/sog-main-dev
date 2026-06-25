@@ -27,7 +27,7 @@ if (!TOKEN || !CLIENT_ID) {
 
 const commands = [
   {
-    name: 'deposit',
+    name: 'ฝากเงินแก๊งค์',
     description: 'บันทึกการฝากเงินเข้าแก๊งค์',
     options: [
       {

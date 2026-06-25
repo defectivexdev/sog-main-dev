@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (body.type === 2) { // 2 = APPLICATION_COMMAND
       const { name, options } = body.data;
 
-      if (name === "deposit") {
+      if (name === "ฝากเงินแก๊งค์") {
         // Find user by Discord ID
         const discordId = body.member?.user?.id;
         
