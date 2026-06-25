@@ -27,19 +27,19 @@ if (!TOKEN || !CLIENT_ID) {
 
 const commands = [
   {
-    name: 'leave',
-    description: 'แจ้งลางานแบบรวดเร็วผ่าน Discord',
+    name: 'deposit',
+    description: 'บันทึกการฝากเงินเข้าแก๊งค์',
     options: [
       {
-        name: 'reason',
-        description: 'เหตุผลที่ลา (เช่น ป่วยไปหาหมอ)',
-        type: 3, // STRING
+        name: 'amount',
+        description: 'จำนวนเงินที่ฝาก (ใส่เป็นตัวเลขเท่านั้น)',
+        type: 4, // INTEGER
         required: true,
       },
       {
-        name: 'days',
-        description: 'จำนวนวันที่ลา (ค่าเริ่มต้น: 1 วัน)',
-        type: 4, // INTEGER
+        name: 'slip_url',
+        description: 'ลิ้งก์รูปสลิปการโอนเงิน (ถ้ามี)',
+        type: 3, // STRING
         required: false,
       }
     ]

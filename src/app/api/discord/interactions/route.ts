@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (body.type === 2) { // 2 = APPLICATION_COMMAND
       const { name, options } = body.data;
 
-      if (name === "leave") {
+      if (name === "deposit") {
         // Find user by Discord ID
         const discordId = body.member?.user?.id;
         
@@ -59,31 +59,36 @@ export async function POST(req: NextRequest) {
         }
 
         // Get options
-        const reasonOpt = options?.find((o: any) => o.name === "reason");
-        const daysOpt = options?.find((o: any) => o.name === "days");
+        const amountOpt = options?.find((o: any) => o.name === "amount");
+        const slipUrlOpt = options?.find((o: any) => o.name === "slip_url");
         
-        const reason = reasonOpt ? reasonOpt.value : "ลากิจ";
-        const days = daysOpt ? parseInt(daysOpt.value) : 1;
+        const amount = amountOpt ? parseFloat(amountOpt.value) : 0;
+        const slipUrl = slipUrlOpt ? slipUrlOpt.value : null;
 
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(startDate.getDate() + days - 1);
+        if (amount <= 0) {
+          return NextResponse.json({
+            type: 4,
+            data: { content: "จำนวนเงินต้องมากกว่า 0" }
+          });
+        }
 
         // Save to Database
-        await prisma.leave.create({
+        await prisma.payment.create({
           data: {
             memberName: member.icName || member.name,
-            startDate,
-            endDate,
-            reason,
-            status: "pending"
+            amount,
+            type: "income",
+            status: "confirmed",
+            description: "ฝากเงินเข้าแก๊งค์ผ่าน Discord",
+            imageUrl: slipUrl,
+            date: new Date()
           }
         });
 
         // Reply to user
         return NextResponse.json({
           type: 4,
-          data: { content: `✅ บันทึกการลาของ **${member.icName || member.name}** สำเร็จ! (เหตุผล: ${reason}, จำนวน ${days} วัน)` }
+          data: { content: `💰 บันทึกการฝากเงินของ **${member.icName || member.name}** สำเร็จ! (จำนวน: ฿${amount.toLocaleString()})` }
         });
       }
     }
