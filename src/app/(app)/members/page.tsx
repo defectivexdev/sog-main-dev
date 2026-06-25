@@ -45,7 +45,7 @@ function MembersContent() {
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams?.get("search") || "");
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", nickname: "", role: "member", phone: "", lineId: "" });
+  const [form, setForm] = useState({ name: "", nickname: "", role: "member", phone: "", lineId: "", discordId: "" });
 
   // Profile Modal State
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -88,7 +88,7 @@ function MembersContent() {
       const mapped = (d.data || []).map((m: any) => ({ ...m, id: m.id || m._id }));
       setMembers(mapped);
       setShowForm(false);
-      setForm({ name: "", nickname: "", role: "member", phone: "", lineId: "" });
+      setForm({ name: "", nickname: "", role: "member", phone: "", lineId: "", discordId: "" });
       showSuccess("เพิ่มสมาชิกใหม่สำเร็จแล้ว! 🎉");
     } else {
       showError("เกิดข้อผิดพลาด ไม่สามารถเพิ่มสมาชิกได้");
@@ -145,6 +145,7 @@ function MembersContent() {
                 <FormField label="ชื่อเล่น" required><input className="sog-input" value={form.nickname} onChange={(e) => setForm({ ...form, nickname: e.target.value })} required /></FormField>
                 <FormField label="บทบาท"><select className="sog-input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="member">สมาชิก</option><option value="admin">แอดมิน</option><option value="leader">หัวหน้า</option></select></FormField>
                 <FormField label="เบอร์โทร"><input className="sog-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></FormField>
+                <FormField label="Discord ID (เพื่อดึงรูปโปรไฟล์)"><input className="sog-input" value={form.discordId} onChange={(e) => setForm({ ...form, discordId: e.target.value })} placeholder="เช่น 123456789012345678" /></FormField>
                 <div style={{ gridColumn: "1/-1", display: "flex", gap: "10px", marginTop: "10px" }}>
                   <button type="submit" className="btn-gold" style={{ flex: 1, padding: "10px" }}>บันทึก</button>
                 </div>
