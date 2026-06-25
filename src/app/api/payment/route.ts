@@ -61,7 +61,7 @@ export const POST = withAuth(async ({ req }) => {
     const isIncome = payment.type === "income";
     const embed: DiscordEmbed = {
       title: isIncome ? "💰 นำส่งเงินเข้าคลัง" : "💸 เบิกเงินจากคลัง",
-      description: `**ผู้ทำรายการ:** \`${payment.memberName}\`\n**จำนวนเงิน:** \`฿${payment.amount.toLocaleString()}\`\n\n**หมายเหตุ:**\n\`\`\`\n${payment.description || "-"}\n\`\`\``,
+      description: `**ผู้ทำรายการ:** \`${payment.memberName}\`\n**จำนวนเงิน:** \`฿${payment.amount.toLocaleString()}\`\n\n**หมายเหตุ:** \`${payment.description || "-"}\``,
       color: isIncome ? 0x34d399 : 0xf87171,
       image: payment.image ? { url: payment.image } : undefined,
       timestamp: new Date().toISOString()
