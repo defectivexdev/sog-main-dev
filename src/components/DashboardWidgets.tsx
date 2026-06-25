@@ -3,39 +3,37 @@
 import useSWR from "swr";
 import { AreaChart, Area, PieChart, Pie, Cell, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
-import { Activity, TrendingUp, User, ClipboardList, DollarSign, Medal, Calendar } from "lucide-react";
+import { Activity, TrendingUp, User, ClipboardList, DollarSign, Medal, Calendar, Terminal } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import TerminalFeed from "./TerminalFeed";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function DashboardWidgets() {
   const { data, isLoading } = useSWR('/api/dashboard/widgets', fetcher, { refreshInterval: 5000 });
-  const previousTimelineRef = useRef<any[]>([]);
+  const { data: liveData } = useSWR('/api/logs/live', fetcher, { refreshInterval: 3000 });
+  const previousLogsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (data?.timeline && Array.isArray(data.timeline)) {
-      const currentTimeline = data.timeline;
-      const previousTimeline = previousTimelineRef.current;
+    if (liveData?.logs && Array.isArray(liveData.logs)) {
+      const currentLogs = liveData.logs;
+      const previousLogs = previousLogsRef.current;
       
-      // If we have previous data, and the latest item's ID is different, trigger a notification!
-      if (previousTimeline.length > 0 && currentTimeline.length > 0) {
-        if (currentTimeline[0].id !== previousTimeline[0].id) {
-          const newItem = currentTimeline[0];
-          const isPayment = newItem.type.includes("PAYMENT");
+      if (previousLogs.length > 0 && currentLogs.length > 0) {
+        if (currentLogs[0].id !== previousLogs[0].id) {
+          const newItem = currentLogs[0];
           
-          toast(isPayment ? "💰 รายรับใหม่!" : "🛎️ คำร้องใหม่!", {
-            description: `${newItem.user} ${newItem.desc}`,
-            duration: 5000,
-            icon: isPayment ? <DollarSign size={16} color="#fbbf24" /> : <ClipboardList size={16} color="#34d399" />
+          toast(`[${newItem.type}] การอัปเดตใหม่!`, {
+            description: `${newItem.actor} ${newItem.action} ${newItem.message}`,
+            duration: 6000,
+            icon: <Terminal size={16} color={newItem.color} />
           });
         }
       }
       
-      previousTimelineRef.current = currentTimeline;
+      previousLogsRef.current = currentLogs;
     }
-  }, [data]);
+  }, [liveData]);
 
   if (isLoading) {
     return (
@@ -171,18 +169,13 @@ export default function DashboardWidgets() {
       {/* Bottom Row */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
         
-        {/* Terminal Feed */}
-        <div style={{ flex: "2 1 600px", minWidth: 0 }}>
-          <TerminalFeed />
-        </div>
-
         {/* Leave Stats Pie Chart Widget */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="glass-card" 
-          style={{ padding: "20px", height: "400px", display: "flex", flexDirection: "column", flex: "1 1 300px", minWidth: 0 }}
+          style={{ padding: "20px", height: "400px", display: "flex", flexDirection: "column", flex: "1 1 100%", minWidth: 0 }}
         >
           <h3 style={{ color: "#e2e8f0", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
             <ClipboardList size={18} color="#34d399" /> สถิติการแจ้งลางานทั้งหมด
