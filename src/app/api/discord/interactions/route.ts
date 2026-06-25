@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
             type: "income",
             status: "confirmed",
             description: "ฝากเงินเข้าแก๊งค์ผ่าน Discord",
-            imageUrl: slipUrl,
+            image: slipUrl,
             date: new Date()
           }
         });
