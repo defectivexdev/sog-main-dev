@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isVerified = verifyKey(bodyText, signature, timestamp, PUBLIC_KEY);
+    const isVerified = await verifyKey(bodyText, signature, timestamp, PUBLIC_KEY);
 
     if (!isVerified) {
       return NextResponse.json({ error: "Invalid request signature" }, { status: 401 });
