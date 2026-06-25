@@ -5,7 +5,7 @@ export default auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session;
 
-  const publicRoutes = ["/login", "/access-denied", "/api/auth"];
+  const publicRoutes = ["/login", "/access-denied", "/api/auth", "/api/discord/interactions"];
   const isPublic = publicRoutes.some((route) => nextUrl.pathname.startsWith(route));
 
   if (isPublic) return NextResponse.next();
