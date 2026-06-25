@@ -37,7 +37,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="bg-animate min-h-screen">
         <Toaster 
-          position="bottom-right" 
+          position="top-right" 
           toastOptions={{ 
             style: { 
               background: 'rgba(15, 22, 41, 0.9)', 

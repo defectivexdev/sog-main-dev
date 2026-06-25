@@ -3,9 +3,10 @@
 import useSWR from "swr";
 import { AreaChart, Area, PieChart, Pie, Cell, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
-import { Activity, TrendingUp, User, ClipboardList, DollarSign, Medal, Clock, Calendar } from "lucide-react";
+import { Activity, TrendingUp, User, ClipboardList, DollarSign, Medal, Calendar } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import TerminalFeed from "./TerminalFeed";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -144,52 +145,9 @@ export default function DashboardWidgets() {
         </div>
       </motion.div>
 
-      {/* Timeline Widget */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-card" 
-        style={{ padding: "20px", height: "380px", overflow: "hidden", display: "flex", flexDirection: "column" }}
-      >
-        <h3 style={{ color: "#e2e8f0", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <Activity size={18} color="#60a5fa" /> ความเคลื่อนไหวล่าสุด
-        </h3>
-        
-        <div style={{ flex: 1, overflowY: "auto", paddingRight: "8px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {safeTimeline.length === 0 ? (
-            <div style={{ color: "#94a3b8", textAlign: "center", marginTop: "20px" }}>ไม่มีความเคลื่อนไหว</div>
-          ) : (
-            safeTimeline.map((item: any, idx: number) => (
-              <div key={item.id} style={{ display: "flex", gap: "12px", position: "relative" }}>
-                {/* Timeline Line */}
-                {idx !== safeTimeline.length - 1 && (
-                  <div style={{ position: "absolute", left: "15px", top: "30px", bottom: "-16px", width: "2px", background: "rgba(255,255,255,0.05)" }} />
-                )}
-                
-                {/* Icon */}
-                <div style={{ 
-                  width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 1,
-                  background: item.type === "PAYMENT_IN" ? "rgba(52, 211, 153, 0.1)" : item.type === "PAYMENT_OUT" ? "rgba(248, 113, 113, 0.1)" : "rgba(96, 165, 250, 0.1)",
-                  color: item.type === "PAYMENT_IN" ? "#34d399" : item.type === "PAYMENT_OUT" ? "#f87171" : "#60a5fa"
-                }}>
-                  {item.type.includes("PAYMENT") ? <DollarSign size={16} /> : <ClipboardList size={16} />}
-                </div>
-
-                {/* Content */}
-                <div>
-                  <div style={{ color: "#e2e8f0", fontSize: "0.9rem", fontWeight: 600 }}>
-                    {item.user} <span style={{ color: "#94a3b8", fontWeight: 400 }}>{item.desc}</span>
-                  </div>
-                  <div style={{ color: "#64748b", fontSize: "0.75rem", marginTop: "2px" }}>
-                    {new Date(item.date).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })} น.
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </motion.div>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <TerminalFeed />
+      </div>
 
       {/* Mini Widgets Row */}
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
