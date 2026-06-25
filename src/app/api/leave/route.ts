@@ -135,16 +135,6 @@ export const PATCH = withManagerAuth(async ({ req, session, role }) => {
         });
       }
 
-      // Update discord log
-      const embed: DiscordEmbed = {
-        title: update.status === "approved" ? "✅ อนุมัติการลางาน" : "❌ ปฏิเสธการลางาน",
-        description: `การลางานของ **${leave.memberName}**\n**ผลการพิจารณา:** ${update.status === "approved" ? "อนุมัติ" : "ไม่อนุมัติ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ''}`,
-        color: update.status === "approved" ? 0x34d399 : 0xf87171,
-        image: leave.imageUrl ? { url: leave.imageUrl } : undefined,
-        footer: { text: `ตรวจสอบโดย: ${actorName}` },
-        timestamp: new Date().toISOString()
-      };
-      await sendDiscordMessage(CHANNELS.LEAVE, [embed]);
     }
 
     return NextResponse.json({ success: true, data: leave });

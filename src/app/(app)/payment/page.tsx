@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRole } from "@/hooks/useRole";
 import { useToast } from "@/hooks/useToast";
 import { motion } from "framer-motion";
-import { Wallet, ArrowUpRight, ArrowDownRight, User, Calendar, Check, Download } from "lucide-react";
+import { Wallet, ArrowUpRight, ArrowDownRight, User, Calendar, Check, Download, X } from "lucide-react";
 import useSWR from "swr";
 
 import PageHeader from "@/components/ui/PageHeader";
@@ -88,6 +88,11 @@ export default function PaymentPage() {
 
   const confirm = async (id: string) => {
     await fetch("/api/payment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: "confirmed" }) });
+    refreshPayments();
+  };
+
+  const reject = async (id: string) => {
+    await fetch("/api/payment", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status: "rejected" }) });
     refreshPayments();
   };
 
@@ -252,7 +257,7 @@ export default function PaymentPage() {
                 </div>
               ) : payments.map((p: any, i: number) => (
                 <motion.div
-                  key={p._id}
+                  key={p.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
@@ -299,27 +304,51 @@ export default function PaymentPage() {
                   )}
                   
                   {isManager && p.status === "pending" && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => confirm(p._id)}
-                      style={{
-                        padding: "10px 16px",
-                        background: "rgba(52,211,153,0.15)",
-                        border: "1px solid rgba(52,211,153,0.3)",
-                        borderRadius: "10px",
-                        color: "#34d399",
-                        cursor: "pointer",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      <Check size={16} /> ยืนยันยอด
-                    </motion.button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => confirm(p.id)}
+                        style={{
+                          padding: "10px 16px",
+                          background: "rgba(52,211,153,0.15)",
+                          border: "1px solid rgba(52,211,153,0.3)",
+                          borderRadius: "10px",
+                          color: "#34d399",
+                          cursor: "pointer",
+                          fontSize: "0.85rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <Check size={16} /> ยืนยันยอด
+                      </motion.button>
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => reject(p.id)}
+                        style={{
+                          padding: "10px 16px",
+                          background: "rgba(248,113,113,0.15)",
+                          border: "1px solid rgba(248,113,113,0.3)",
+                          borderRadius: "10px",
+                          color: "#f87171",
+                          cursor: "pointer",
+                          fontSize: "0.85rem",
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <X size={16} /> ยกเลิก
+                      </motion.button>
+                    </div>
                   )}
                 </motion.div>
               ))}
