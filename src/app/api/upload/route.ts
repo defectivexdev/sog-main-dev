@@ -18,24 +18,41 @@ export const POST = withAuth(async ({ req }) => {
       return NextResponse.json({ success: false, error: "File too large (max 15MB)" }, { status: 400 });
     }
 
-    // Upload to catbox.moe
-    const formData = new FormData();
-    formData.append("reqtype", "fileupload");
-    formData.append("fileToUpload", file, file.name);
+    // Upload to Discord Channel (using Payment channel or a general one)
+    const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+    if (!BOT_TOKEN) {
+      throw new Error("Discord Bot Token is not configured");
+    }
 
-    const res = await fetch("https://catbox.moe/user/api.php", {
+    const discordFormData = new FormData();
+    discordFormData.append('payload_json', JSON.stringify({ content: 'Slip Uploaded via Web' }));
+    discordFormData.append('files[0]', file, file.name);
+
+    // Using the payment channel ID
+    const CHANNEL_ID = "1458476344898883646";
+    const res = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
       method: "POST",
-      body: formData,
+      headers: {
+        Authorization: `Bot ${BOT_TOKEN}`
+      },
+      body: discordFormData,
     });
 
     if (!res.ok) {
-      throw new Error(`Catbox upload failed: ${res.statusText}`);
+      const errText = await res.text();
+      console.error("Discord upload failed:", errText);
+      throw new Error(`Discord upload failed: ${res.statusText}`);
     }
 
-    const url = await res.text();
+    const json = await res.json();
+    if (!json.attachments || json.attachments.length === 0) {
+      throw new Error("No attachment returned from Discord");
+    }
+
+    const url = json.attachments[0].url;
 
     // Return the public URL
-    return NextResponse.json({ success: true, url: url.trim() });
+    return NextResponse.json({ success: true, url: url });
   } catch (error: any) {
     console.error("Upload API Error:", error);
     return NextResponse.json({ success: false, error: "Server Error", details: error.message }, { status: 500 });
