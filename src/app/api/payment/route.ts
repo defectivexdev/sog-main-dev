@@ -118,17 +118,6 @@ export const PATCH = withManagerAuth(async ({ req, session, role }) => {
           }
         });
       }
-
-      // Send to Discord
-      const isIncome = payment.type === "income";
-      const embed: DiscordEmbed = {
-        title: update.status === "confirmed" ? (isIncome ? "✅ ยืนยันรับเงิน" : "✅ ยืนยันจ่ายเงิน") : "❌ ปฏิเสธรายการบัญชี",
-        description: `รายการของ **${payment.memberName}** จำนวน **฿${payment.amount.toLocaleString()}**\n${update.status === "confirmed" ? "ได้รับการยืนยันแล้ว" : "ถูกปฏิเสธ"}\n${update.rejectReason ? `*เหตุผล: ${update.rejectReason}*` : ""}`,
-        color: update.status === "confirmed" ? 0x34d399 : 0xf87171,
-        footer: { text: `ตรวจสอบโดย: ${actorName}` },
-        timestamp: new Date().toISOString()
-      };
-      await sendDiscordMessage(CHANNELS.PAYMENT, [embed]);
     }
 
     return NextResponse.json({ success: true, data: payment });
