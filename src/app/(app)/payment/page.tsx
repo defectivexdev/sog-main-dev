@@ -199,7 +199,7 @@ export default function PaymentPage() {
                   setForm(f => ({ ...f, days: d, amount: d * 30000 }));
                 }} required style={{ height: "46px", width: "100%", fontSize: "1.1rem", color: "#34d399" }}>
                   {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                    <option key={d} value={d} style={{ color: "#000" }}>{d} วัน ({(d * 30000).toLocaleString()} บาท)</option>
+                    <option key={d} value={d} style={{ color: "#e2e8f0", background: "#0F1629" }}>{d} วัน ({(d * 30000).toLocaleString()} บาท)</option>
                   ))}
                 </select>
               </FormField>
