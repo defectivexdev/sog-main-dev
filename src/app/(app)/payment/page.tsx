@@ -34,7 +34,7 @@ export default function PaymentPage() {
   const members = membersList.map((m: any) => ({ id: m.id, name: m.icName || m.name }));
   const loading = payLoading || memLoading;
   
-  const [form, setForm] = useState({ memberName: "", amount: 0, description: "", image: "", date: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ memberName: "", amount: 30000, description: "", image: "", date: new Date().toISOString().split("T")[0], days: 1 });
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,13 +62,14 @@ export default function PaymentPage() {
       ...form, 
       type: activeTab, 
       image: uploadedUrl, 
+      description: activeTab === "income" ? `ฝากเงินแก๊งค์ (${form.days} วัน)` : form.description,
       memberName: form.memberName || (user?.icName || user?.name) 
     };
     
     const res = await fetch("/api/payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (res.ok) { 
       showSuccess(activeTab === "income" ? "✅ บันทึกการส่งเงินสำเร็จ!" : "✅ บันทึกการเบิกจ่ายสำเร็จ!"); 
-      setForm({ memberName: "", amount: 0, description: "", image: "", date: new Date().toISOString().split("T")[0] }); 
+      setForm({ memberName: user?.icName || user?.name || "", amount: activeTab === "income" ? 30000 : 0, description: "", image: "", date: new Date().toISOString().split("T")[0], days: 1 }); 
       setFile(null);
       refreshPayments(); 
     } else {
@@ -147,7 +148,7 @@ export default function PaymentPage() {
 
       <div style={{ marginBottom: "24px", display: "flex", gap: "12px" }}>
         <button 
-          onClick={() => { setActiveTab("income"); setPage(1); }}
+          onClick={() => { setActiveTab("income"); setPage(1); setForm(f => ({ ...f, amount: f.days * 30000 })); }}
           style={{ 
             padding: "10px 20px", borderRadius: "12px", fontWeight: 700, 
             background: activeTab === "income" ? "rgba(52, 211, 153, 0.2)" : "rgba(255, 255, 255, 0.05)",
@@ -159,7 +160,7 @@ export default function PaymentPage() {
           รายรับ (Income)
         </button>
         <button 
-          onClick={() => { setActiveTab("expense"); setPage(1); }}
+          onClick={() => { setActiveTab("expense"); setPage(1); setForm(f => ({ ...f, amount: 0 })); }}
           style={{ 
             padding: "10px 20px", borderRadius: "12px", fontWeight: 700, 
             background: activeTab === "expense" ? "rgba(248, 113, 113, 0.2)" : "rgba(255, 255, 255, 0.05)",
@@ -191,8 +192,21 @@ export default function PaymentPage() {
               </select>
             </FormField>
 
-            <FormField label="จำนวนเงิน (บาท)" required>
-              <input type="number" className="sog-input" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} min={1} required style={{ height: "46px", fontSize: "1.1rem", width: "100%" }} placeholder="0" />
+            {activeTab === "income" && (
+              <FormField label="จำนวนวันที่ฝาก (30,000 บาท/วัน)" required>
+                <select className="sog-input" value={form.days} onChange={e => {
+                  const d = Number(e.target.value);
+                  setForm(f => ({ ...f, days: d, amount: d * 30000 }));
+                }} required style={{ height: "46px", width: "100%", fontSize: "1.1rem", color: "#34d399" }}>
+                  {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                    <option key={d} value={d} style={{ color: "#000" }}>{d} วัน ({(d * 30000).toLocaleString()} บาท)</option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            <FormField label={activeTab === "income" ? "จำนวนเงินรวม (บาท)" : "จำนวนเงิน (บาท)"} required>
+              <input type="number" className="sog-input" value={form.amount || ""} onChange={e => setForm(f => ({ ...f, amount: Number(e.target.value) }))} min={1} required style={{ height: "46px", fontSize: "1.1rem", width: "100%", background: activeTab === "income" ? "rgba(0,0,0,0.2)" : "transparent" }} placeholder="0" readOnly={activeTab === "income"} />
             </FormField>
 
             {activeTab === "expense" && (
