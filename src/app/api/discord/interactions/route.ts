@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyKey } from "discord-interactions";
 import prisma from "@/lib/db";
+import { sendDiscordMessage, CHANNELS, DiscordEmbed } from "@/lib/discordBot";
 
 // Discord sends interactions via POST
 export async function POST(req: NextRequest) {
@@ -84,6 +85,16 @@ export async function POST(req: NextRequest) {
             date: new Date()
           }
         });
+
+        // Send Embed to Payment Channel
+        const embed: DiscordEmbed = {
+          title: "💰 นำส่งเงินเข้าคลัง (ผ่าน Discord)",
+          description: `**ผู้ทำรายการ:** \`${member.icName || member.name}\`\n**จำนวนเงิน:** \`฿${amount.toLocaleString()}\`\n\n**หมายเหตุ:**\n\`\`\`\nฝากเงินเข้าแก๊งค์ผ่าน Discord\n\`\`\``,
+          color: 0x34d399,
+          image: slipUrl ? { url: slipUrl } : undefined,
+          timestamp: new Date().toISOString()
+        };
+        await sendDiscordMessage("1458476344898883646", [embed]);
 
         // Reply to user
         return NextResponse.json({
