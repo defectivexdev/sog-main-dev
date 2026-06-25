@@ -35,8 +35,33 @@ export default function PaymentPage() {
   const loading = payLoading || memLoading;
   
   const [form, setForm] = useState({ memberName: "", amount: 30000, description: "", image: "", date: new Date().toISOString().split("T")[0], days: 1 });
+  const [additionalMembers, setAdditionalMembers] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleAddMember = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val && !additionalMembers.includes(val) && val !== (form.memberName || user?.icName || user?.name)) {
+      setAdditionalMembers(prev => {
+        const newArr = [...prev, val];
+        setForm(f => ({ ...f, amount: f.days * 30000 * (1 + newArr.length) }));
+        return newArr;
+      });
+    }
+  };
+
+  const handleRemoveMember = (m: string) => {
+    setAdditionalMembers(prev => {
+      const newArr = prev.filter(x => x !== m);
+      setForm(f => ({ ...f, amount: f.days * 30000 * (1 + newArr.length) }));
+      return newArr;
+    });
+  };
+
+  const handleDaysChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const d = Number(e.target.value);
+    setForm(f => ({ ...f, days: d, amount: d * 30000 * (1 + additionalMembers.length) }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,13 +88,16 @@ export default function PaymentPage() {
       type: activeTab, 
       image: uploadedUrl, 
       description: activeTab === "income" ? `ฝากเงินแก๊งค์ (${form.days} วัน)${form.description ? ` - ${form.description}` : ''}` : form.description,
-      memberName: form.memberName || (user?.icName || user?.name) 
+      memberName: activeTab === "income" && additionalMembers.length > 0 
+        ? `${form.memberName || (user?.icName || user?.name)} และ ${additionalMembers.join(', ')}`
+        : (form.memberName || (user?.icName || user?.name))
     };
     
     const res = await fetch("/api/payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (res.ok) { 
       showSuccess(activeTab === "income" ? "✅ บันทึกการส่งเงินสำเร็จ!" : "✅ บันทึกการเบิกจ่ายสำเร็จ!"); 
       setForm({ memberName: user?.icName || user?.name || "", amount: activeTab === "income" ? 30000 : 0, description: "", image: "", date: new Date().toISOString().split("T")[0], days: 1 }); 
+      setAdditionalMembers([]);
       setFile(null);
       refreshPayments(); 
     } else {
@@ -153,7 +181,7 @@ export default function PaymentPage() {
 
       <div style={{ marginBottom: "24px", display: "flex", gap: "12px" }}>
         <button 
-          onClick={() => { setActiveTab("income"); setPage(1); setForm(f => ({ ...f, amount: f.days * 30000 })); }}
+          onClick={() => { setActiveTab("income"); setPage(1); setForm(f => ({ ...f, amount: f.days * 30000 * (1 + additionalMembers.length) })); }}
           style={{ 
             padding: "10px 20px", borderRadius: "12px", fontWeight: 700, 
             background: activeTab === "income" ? "rgba(52, 211, 153, 0.2)" : "rgba(255, 255, 255, 0.05)",
@@ -198,16 +226,38 @@ export default function PaymentPage() {
             </FormField>
 
             {activeTab === "income" && (
-              <FormField label="จำนวนวันที่ฝาก (30,000 บาท/วัน)" required>
-                <select className="sog-input" value={form.days} onChange={e => {
-                  const d = Number(e.target.value);
-                  setForm(f => ({ ...f, days: d, amount: d * 30000 }));
-                }} required style={{ height: "46px", width: "100%", fontSize: "1.1rem", color: "#34d399" }}>
-                  {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                    <option key={d} value={d} style={{ color: "#e2e8f0", background: "#0F1629" }}>{d} วัน ({(d * 30000).toLocaleString()} บาท)</option>
-                  ))}
-                </select>
-              </FormField>
+              <>
+                <FormField label="ฝากร่วมกับเพื่อน (ถ้ามี)">
+                  <select className="sog-input" value="" onChange={handleAddMember} style={{ height: "46px", width: "100%" }}>
+                    <option value="">— เลือกเพื่อนที่ฝากร่วมด้วย —</option>
+                    {members
+                      .filter((m: any) => m.name !== (form.memberName || user?.icName || user?.name) && !additionalMembers.includes(m.name))
+                      .map((m: any) => (
+                        <option key={m.id} value={m.name}>{m.name}</option>
+                    ))}
+                  </select>
+                  {additionalMembers.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                      {additionalMembers.map(m => (
+                        <span key={m} style={{ background: "rgba(52,211,153,0.2)", color: "#34d399", padding: "6px 10px", borderRadius: "8px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                          {m} 
+                          <button type="button" onClick={() => handleRemoveMember(m)} style={{ background: "none", border: "none", color: "#34d399", cursor: "pointer", display: "flex" }}>
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </FormField>
+
+                <FormField label="จำนวนวันที่ฝาก (30,000 บาท/คน/วัน)" required>
+                  <select className="sog-input" value={form.days} onChange={handleDaysChange} required style={{ height: "46px", width: "100%", fontSize: "1.1rem", color: "#34d399" }}>
+                    {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                      <option key={d} value={d} style={{ color: "#e2e8f0", background: "#0F1629" }}>{d} วัน</option>
+                    ))}
+                  </select>
+                </FormField>
+              </>
             )}
 
             <FormField label={activeTab === "income" ? "จำนวนเงินรวม (บาท)" : "จำนวนเงิน (บาท)"} required>
