@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
         startDate: new Date(body.startDate),
         endDate: body.endDate ? new Date(body.endDate) : null,
         type: body.type || "event",
+        recurrence: body.recurrence || "none",
         createdBy: session.user.icName || session.user.name
       }
     });

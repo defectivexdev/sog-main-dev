@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRole } from "@/hooks/useRole";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, MapPin, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, X, Clock, MapPin, Trash2, Share2, Repeat } from "lucide-react";
 import { toast } from "sonner";
 
 interface GangEvent {
@@ -13,6 +13,7 @@ interface GangEvent {
   startDate: string;
   endDate: string | null;
   type: string;
+  recurrence: string;
   createdBy: string;
 }
 
@@ -39,7 +40,7 @@ export default function CalendarPage() {
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", startDate: "", time: "", type: "event" });
+  const [form, setForm] = useState({ title: "", description: "", startDate: "", time: "", type: "event", recurrence: "none" });
   const [submitting, setSubmitting] = useState(false);
 
   // Selected Day state
@@ -95,7 +96,8 @@ export default function CalendarPage() {
           title: form.title,
           description: form.description,
           startDate: dateTimeString,
-          type: form.type
+          type: form.type,
+          recurrence: form.recurrence
         })
       });
 
@@ -148,11 +150,29 @@ export default function CalendarPage() {
     // Actual days
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const currentGridDate = new Date(`${dateStr}T00:00:00`);
       
       const dayEvents = events.filter(e => {
         const localDate = new Date(e.startDate);
         const localDateStr = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
-        return localDateStr === dateStr;
+        
+        // Exact match (for 'none' or the first occurrence of repeating events)
+        if (localDateStr === dateStr) return true;
+
+        // Skip if the event hasn't started yet relative to this cell
+        // We set localDate to 00:00:00 to easily compare dates only
+        const localDateOnly = new Date(`${localDateStr}T00:00:00`);
+        if (currentGridDate < localDateOnly) return false;
+
+        if (e.recurrence === "weekly") {
+          return localDate.getDay() === currentGridDate.getDay();
+        }
+
+        if (e.recurrence === "monthly") {
+          return localDate.getDate() === currentGridDate.getDate();
+        }
+
+        return false;
       });
 
       const isToday = dateStr === todayStr;
@@ -299,6 +319,15 @@ export default function CalendarPage() {
                 </div>
 
                 <div>
+                  <label style={{ display: "block", color: "#94a3b8", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>การทำซ้ำ (Recurrence)</label>
+                  <select className="sog-input" value={form.recurrence} onChange={e => setForm({...form, recurrence: e.target.value})}>
+                    <option value="none">ไม่มี (ครั้งเดียว)</option>
+                    <option value="weekly">รายสัปดาห์ (ทุกสัปดาห์ในวันนี้)</option>
+                    <option value="monthly">รายเดือน (ทุกเดือนในวันที่นี้)</option>
+                  </select>
+                </div>
+
+                <div>
                   <label style={{ display: "block", color: "#94a3b8", fontSize: "0.85rem", marginBottom: "6px", fontWeight: 600 }}>รายละเอียดเพิ่มเติม (ไม่บังคับ)</label>
                   <textarea className="sog-input" rows={3} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="สถานที่ หรือสิ่งที่ต้องเตรียมมา..." style={{ resize: "vertical" }} />
                 </div>
@@ -352,12 +381,27 @@ export default function CalendarPage() {
                       )}
                       
                       <div style={{ marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                        <div style={{ fontSize: "0.75rem", color: "#64748b" }}>สร้างโดย: {e.createdBy}</div>
-                        {isLeaderOrVice && (
-                          <button onClick={() => handleDelete(e.id)} style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 600 }} className="hover-text-white">
-                            <Trash2 size={14} /> ลบ
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>สร้างโดย: {e.createdBy}</div>
+                          {e.recurrence !== "none" && (
+                            <div style={{ fontSize: "0.75rem", color: "#c9a227", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <Repeat size={12} /> ทำซ้ำ: {e.recurrence === "weekly" ? "รายสัปดาห์" : "รายเดือน"}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <button onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/calendar/${e.id}`);
+                            toast.success("คัดลอกลิงก์สำหรับแชร์แล้ว");
+                          }} style={{ background: "transparent", border: "none", color: "#34d399", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 600 }} className="hover-text-white">
+                            <Share2 size={14} /> แชร์ลิงก์
                           </button>
-                        )}
+                          {isLeaderOrVice && (
+                            <button onClick={() => handleDelete(e.id)} style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: 600 }} className="hover-text-white">
+                              <Trash2 size={14} /> ลบ
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
