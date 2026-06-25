@@ -233,7 +233,7 @@ export default function CalendarPage() {
         
         {isLeaderOrVice && (
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => {
-            setForm({ title: "", description: "", startDate: new Date().toISOString().split("T")[0], time: "20:00", type: "event" });
+            setForm({ title: "", description: "", startDate: new Date().toISOString().split("T")[0], time: "20:00", type: "event", recurrence: "none" });
             setModalOpen(true);
           }} className="btn-gold" style={{ display: "flex", alignItems: "center", gap: "8px", height: "40px", padding: "0 20px" }}>
             <Plus size={18} /> สร้างนัดหมายใหม่
