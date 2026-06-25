@@ -24,6 +24,7 @@ interface Member {
   joinDate: string;
   phone?: string;
   discordId?: string;
+  lastActive?: string | null;
 }
 
 interface ProfileStats {
@@ -184,8 +185,11 @@ function MembersContent() {
             >
               <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "4px", background: roleColor[m.role] }} />
               
-              <div style={{ width: "70px", height: "70px", background: "rgba(15,22,41,0.8)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: `2px solid ${roleColor[m.role]}`, fontSize: "1.8rem" }}>
+              <div style={{ width: "70px", height: "70px", background: "rgba(15,22,41,0.8)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: `2px solid ${roleColor[m.role]}`, fontSize: "1.8rem", position: "relative" }}>
                 {m.avatar ? <Image src={m.avatar} alt={m.icName || m.name} width={66} height={66} style={{ borderRadius: "50%" }} /> : "👤"}
+                {m.lastActive && (new Date().getTime() - new Date(m.lastActive).getTime() < 5 * 60 * 1000) && (
+                  <div style={{ position: "absolute", bottom: "2px", right: "2px", width: "16px", height: "16px", background: "#22c55e", borderRadius: "50%", border: "3px solid #0f1629", boxShadow: "0 0 10px rgba(34, 197, 94, 0.6)", zIndex: 10 }} title="Online Now" />
+                )}
               </div>
               
               <h3 style={{ color: "#e2e8f0", fontWeight: 800, fontSize: "1.1rem", margin: "0 0 4px" }}>{m.icName || m.name}</h3>
@@ -205,8 +209,11 @@ function MembersContent() {
         {selectedMember && (
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ display: "flex", gap: "20px", alignItems: "center", background: `linear-gradient(135deg, ${roleColor[selectedMember.role]}20 0%, transparent 100%)`, padding: "20px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ width: "80px", height: "80px", background: "rgba(15,22,41,0.8)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${roleColor[selectedMember.role]}`, fontSize: "2rem", flexShrink: 0 }}>
+              <div style={{ width: "80px", height: "80px", background: "rgba(15,22,41,0.8)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${roleColor[selectedMember.role]}`, fontSize: "2rem", flexShrink: 0, position: "relative" }}>
                 {selectedMember.avatar ? <Image src={selectedMember.avatar} alt={selectedMember.icName || selectedMember.name} width={76} height={76} style={{ borderRadius: "50%" }} /> : "👤"}
+                {selectedMember.lastActive && (new Date().getTime() - new Date(selectedMember.lastActive).getTime() < 5 * 60 * 1000) && (
+                  <div style={{ position: "absolute", bottom: "4px", right: "4px", width: "18px", height: "18px", background: "#22c55e", borderRadius: "50%", border: "3px solid #0f1629", boxShadow: "0 0 10px rgba(34, 197, 94, 0.6)", zIndex: 10 }} title="Online Now" />
+                )}
               </div>
               <div>
                 <h2 style={{ margin: "0 0 4px", fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{selectedMember.icName || selectedMember.name}</h2>

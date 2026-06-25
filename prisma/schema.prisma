@@ -21,6 +21,7 @@ model Member {
   houseId   String?
   house     House?   @relation(fields: [houseId], references: [id])
   leftAt    DateTime?
+  lastActive DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
