@@ -63,15 +63,15 @@ export default function NotificationBell() {
               onClick={() => setIsOpen(false)} 
             />
             <motion.div 
-              initial={{ opacity: 0, x: -10, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -10, scale: 0.95 }}
+              initial={{ opacity: 0, x: "-50%", y: "-40%", scale: 0.95 }}
+              animate={{ opacity: 1, x: "-50%", y: "-50%", scale: 1 }}
+              exit={{ opacity: 0, x: "-50%", y: "-40%", scale: 0.95 }}
               style={{ 
-                position: "fixed", bottom: "20px", left: "280px", 
-                width: "320px", background: "rgba(15, 23, 42, 0.95)", backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", 
-                boxShadow: "0 10px 40px rgba(0,0,0,0.5)", zIndex: 60, overflow: "hidden",
-                transformOrigin: "bottom left"
+                position: "fixed", top: "50%", left: "50%", 
+                width: "90%", maxWidth: "360px", 
+                background: "rgba(15, 23, 42, 0.98)", backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.15)", borderRadius: "16px", 
+                boxShadow: "0 20px 50px rgba(0,0,0,0.8)", zIndex: 60, overflow: "hidden"
               }}
             >
               <div style={{ padding: "16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -81,7 +81,7 @@ export default function NotificationBell() {
                 </button>
               </div>
 
-              <div style={{ maxHeight: "350px", overflowY: "auto", padding: "8px" }}>
+              <div style={{ maxHeight: "60vh", overflowY: "auto", padding: "8px" }}>
                 {notifications.length === 0 ? (
                   <div style={{ padding: "30px 16px", textAlign: "center", color: "#64748b", fontSize: "0.85rem" }}>
                     ไม่มีการแจ้งเตือน
