@@ -4,12 +4,37 @@ import useSWR from "swr";
 import { AreaChart, Area, PieChart, Pie, Cell, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 import { Activity, TrendingUp, User, ClipboardList, DollarSign, Medal, Clock, Calendar } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function DashboardWidgets() {
-  const { data, isLoading } = useSWR('/api/dashboard/widgets', fetcher);
+  const { data, isLoading } = useSWR('/api/dashboard/widgets', fetcher, { refreshInterval: 5000 });
+  const previousTimelineRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    if (data?.timeline && Array.isArray(data.timeline)) {
+      const currentTimeline = data.timeline;
+      const previousTimeline = previousTimelineRef.current;
+      
+      // If we have previous data, and the latest item's ID is different, trigger a notification!
+      if (previousTimeline.length > 0 && currentTimeline.length > 0) {
+        if (currentTimeline[0].id !== previousTimeline[0].id) {
+          const newItem = currentTimeline[0];
+          const isPayment = newItem.type.includes("PAYMENT");
+          
+          toast(isPayment ? "💰 รายรับใหม่!" : "🛎️ คำร้องใหม่!", {
+            description: `${newItem.user} ${newItem.desc}`,
+            duration: 5000,
+            icon: isPayment ? <DollarSign size={16} color="#fbbf24" /> : <ClipboardList size={16} color="#34d399" />
+          });
+        }
+      }
+      
+      previousTimelineRef.current = currentTimeline;
+    }
+  }, [data]);
 
   if (isLoading) {
     return (

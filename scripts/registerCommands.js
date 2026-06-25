@@ -1,0 +1,73 @@
+const fs = require('fs');
+const path = require('path');
+
+// Load environment variables manually since we are running as a bare Node script
+const envPath = path.join(__dirname, '../.env.local');
+let envFile = "";
+try {
+  envFile = fs.readFileSync(envPath, 'utf8');
+} catch (e) {
+  console.error("Could not find .env.local file");
+  process.exit(1);
+}
+
+const envVars = {};
+envFile.split('\n').forEach(line => {
+  const match = line.match(/^([^=]+)=(.*)$/);
+  if (match) envVars[match[1]] = match[2].trim().replace(/^['"]|['"]$/g, '');
+});
+
+const TOKEN = envVars.DISCORD_BOT_TOKEN;
+const CLIENT_ID = envVars.DISCORD_CLIENT_ID;
+
+if (!TOKEN || !CLIENT_ID) {
+  console.error("Missing DISCORD_BOT_TOKEN or DISCORD_CLIENT_ID in .env.local");
+  process.exit(1);
+}
+
+const commands = [
+  {
+    name: 'leave',
+    description: 'แจ้งลางานแบบรวดเร็วผ่าน Discord',
+    options: [
+      {
+        name: 'reason',
+        description: 'เหตุผลที่ลา (เช่น ป่วยไปหาหมอ)',
+        type: 3, // STRING
+        required: true,
+      },
+      {
+        name: 'days',
+        description: 'จำนวนวันที่ลา (ค่าเริ่มต้น: 1 วัน)',
+        type: 4, // INTEGER
+        required: false,
+      }
+    ]
+  }
+];
+
+async function registerCommands() {
+  console.log('Started refreshing application (/) commands.');
+
+  try {
+    const response = await fetch(`https://discord.com/api/v10/applications/${CLIENT_ID}/commands`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bot ${TOKEN}`
+      },
+      body: JSON.stringify(commands)
+    });
+
+    if (response.ok) {
+      console.log('Successfully reloaded application (/) commands.');
+    } else {
+      const errorText = await response.text();
+      console.error('Failed to register commands:', response.status, errorText);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+registerCommands();
