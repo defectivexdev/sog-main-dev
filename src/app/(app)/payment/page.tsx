@@ -271,8 +271,8 @@ export default function PaymentPage() {
               </FormField>
             )}
 
-            <FormField label="แนบรูปภาพ (ภาพถ่าย/สกรีนช็อต)" required>
-              <input type="file" accept="image/*" onChange={handleImageChange} required className="sog-input" style={{ height: "46px", padding: "10px", width: "100%" }} />
+            <FormField label={activeTab === "income" ? "แนบรูปภาพ (ภาพถ่าย/สกรีนช็อต)" : "แนบรูปภาพ (ทางเลือก)"} required={activeTab === "income"}>
+              <input type="file" accept="image/*" onChange={handleImageChange} required={activeTab === "income"} className="sog-input" style={{ height: "46px", padding: "10px", width: "100%" }} />
               {form.image && (
                 <div style={{ marginTop: "12px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "200px", display: "flex", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
                   <img src={form.image} alt="Preview" style={{ maxHeight: "200px", objectFit: "contain" }} loading="lazy" />
