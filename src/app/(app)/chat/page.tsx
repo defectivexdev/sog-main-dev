@@ -2,11 +2,13 @@
 import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2, Smile, Volume2, VolumeX } from "lucide-react";
+import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2, Smile, Volume2, VolumeX, Reply, Pin, SmilePlus, X } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/useToast";
 import EmojiPicker, { Theme } from 'emoji-picker-react';
+
+const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏", "🔥"];
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -20,8 +22,13 @@ export default function ChatPage() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [replyTo, setReplyTo] = useState<any>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [activeReactionId, setActiveReactionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesCount = useRef(0);
+  
+  const isManager = ["admin", "leader", "vice_leader"].includes((session?.user as any)?.gangRole || (session?.user as any)?.role || "");
 
   // Play a simple pop sound using Web Audio API
   const playNotificationSound = () => {
@@ -92,7 +99,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           content: content.trim(),
           imageUrl: imageUrl.trim(),
-          linkUrl: linkUrl.trim()
+          linkUrl: linkUrl.trim(),
+          replyToId: replyTo?.id
         })
       });
 
@@ -102,6 +110,7 @@ export default function ChatPage() {
         setLinkUrl("");
         setShowExtras(false);
         setShowEmoji(false);
+        setReplyTo(null);
         mutate();
         setTimeout(scrollToBottom, 100);
       } else {
@@ -111,6 +120,29 @@ export default function ChatPage() {
       showError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
     setSending(false);
+  };
+
+  const handleReact = async (msgId: string, emoji: string) => {
+    setActiveReactionId(null);
+    try {
+      await fetch(`/api/chat/${msgId}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji })
+      });
+      mutate();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handlePin = async (msgId: string) => {
+    try {
+      await fetch(`/api/chat/${msgId}/pin`, { method: "POST" });
+      mutate();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -176,17 +208,29 @@ export default function ChatPage() {
                     background: isMe ? "rgba(255,255,255,0.02)" : "transparent",
                     transition: "background 0.2s"
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = isMe ? "rgba(255,255,255,0.02)" : "transparent")}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; setHoveredMessageId(msg.id); }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isMe ? "rgba(255,255,255,0.02)" : "transparent"; setHoveredMessageId(null); }}
                 >
                   <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                     {msg.senderAvatar ? <Image src={msg.senderAvatar} alt="avatar" width={40} height={40} /> : <div style={{ fontSize: "1.2rem" }}>👤</div>}
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, position: "relative" }}>
+                    
+                    {msg.replyToMessage && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#64748b", fontSize: "0.85rem", marginBottom: "4px", paddingLeft: "12px", borderLeft: "2px solid rgba(255,255,255,0.1)" }}>
+                        <Reply size={12} />
+                        <span style={{ fontWeight: 600 }}>{msg.replyToMessage.senderName}</span>
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "200px", opacity: 0.8 }}>
+                          {msg.replyToMessage.content || (msg.replyToMessage.imageUrl ? "รูปภาพ" : "ข้อความ")}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "1rem", color: isMe ? "#c9a227" : "#e2e8f0", fontWeight: 700 }}>
+                      <span style={{ fontSize: "1rem", color: isMe ? "#c9a227" : "#e2e8f0", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
                         {msg.senderName}
+                        {msg.isPinned && <span title="Pinned"><Pin size={12} color="#f43f5e" /></span>}
                       </span>
                       <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
                         {new Date(msg.createdAt).toLocaleDateString("th-TH")} {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
@@ -199,7 +243,7 @@ export default function ChatPage() {
                       flexDirection: "column",
                       gap: "8px"
                     }}>
-                      {msg.content && <div style={{ lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "pre-wrap", fontSize: "0.95rem" }}>{msg.content}</div>}
+                      {msg.content && <div style={{ lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "pre-wrap", fontSize: "0.95rem", background: msg.isPinned ? "rgba(244,63,94,0.1)" : "transparent", padding: msg.isPinned ? "4px 8px" : 0, borderRadius: "4px", borderLeft: msg.isPinned ? "2px solid #f43f5e" : "none" }}>{msg.content}</div>}
                       
                       {msg.imageUrl && (
                         <div style={{ marginTop: msg.content ? "8px" : "0" }}>
@@ -225,8 +269,91 @@ export default function ChatPage() {
                           <Link2 size={14} /> เปิดลิ้งค์ที่แนบมา
                         </a>
                       )}
+                      
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+                          {Object.entries(msg.reactions).map(([emoji, users]: [string, any]) => {
+                            const hasReacted = users.includes(matchName);
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReact(msg.id, emoji)}
+                                title={users.join(", ")}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: "4px",
+                                  padding: "2px 6px",
+                                  borderRadius: "12px",
+                                  border: hasReacted ? "1px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
+                                  background: hasReacted ? "rgba(201,162,39,0.15)" : "rgba(0,0,0,0.2)",
+                                  fontSize: "0.85rem",
+                                  cursor: "pointer",
+                                  color: hasReacted ? "#c9a227" : "#94a3b8"
+                                }}
+                              >
+                                <span>{emoji}</span>
+                                <span>{users.length}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
+                  
+                  {hoveredMessageId === msg.id && (
+                    <div style={{
+                      position: "absolute",
+                      right: "16px",
+                      top: "-12px",
+                      background: "rgba(15,22,41,0.9)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "8px",
+                      display: "flex",
+                      padding: "4px",
+                      gap: "4px",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.3)"
+                    }}>
+                      <button onClick={() => setActiveReactionId(activeReactionId === msg.id ? null : msg.id)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "4px" }} title="React">
+                        <SmilePlus size={16} />
+                      </button>
+                      <button onClick={() => setReplyTo(msg)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "4px" }} title="Reply">
+                        <Reply size={16} />
+                      </button>
+                      {isManager && (
+                        <button onClick={() => handlePin(msg.id)} style={{ background: "transparent", border: "none", color: msg.isPinned ? "#f43f5e" : "#94a3b8", cursor: "pointer", padding: "4px", borderRadius: "4px" }} title={msg.isPinned ? "Unpin" : "Pin"}>
+                          <Pin size={16} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {activeReactionId === msg.id && (
+                    <div style={{
+                      position: "absolute",
+                      right: "16px",
+                      top: "24px",
+                      background: "rgba(15,22,41,0.95)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: "24px",
+                      display: "flex",
+                      padding: "8px",
+                      gap: "8px",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+                      zIndex: 10
+                    }}>
+                      {QUICK_REACTIONS.map(emoji => (
+                        <button 
+                          key={emoji}
+                          onClick={() => handleReact(msg.id, emoji)}
+                          style={{ background: "transparent", border: "none", fontSize: "1.2rem", cursor: "pointer", padding: "4px", transition: "transform 0.1s" }}
+                          onMouseEnter={e => e.currentTarget.style.transform = "scale(1.2)"}
+                          onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               );
             })
@@ -237,6 +364,20 @@ export default function ChatPage() {
         {/* Input Area */}
         <div style={{ background: "rgba(15,22,41,0.8)", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "16px", position: "relative" }}>
           
+          <AnimatePresence>
+            {replyTo && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.3)", padding: "8px 16px", borderRadius: "8px 8px 0 0", marginBottom: "-8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#94a3b8", fontSize: "0.85rem" }}>
+                  <Reply size={14} />
+                  <span>กำลังตอบกลับ <b>{replyTo.senderName}</b>: {replyTo.content || "ไฟล์แนบ"}</span>
+                </div>
+                <button type="button" onClick={() => setReplyTo(null)} style={{ background: "transparent", border: "none", color: "#64748b", cursor: "pointer" }}>
+                  <X size={14} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {showEmoji && (
               <motion.div 

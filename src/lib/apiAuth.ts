@@ -9,14 +9,14 @@ type AuthenticatedContext = {
   discordId: string;
 };
 
-type ApiHandler = (ctx: AuthenticatedContext) => Promise<NextResponse> | NextResponse;
+type ApiHandler = (ctx: AuthenticatedContext, params?: any) => Promise<NextResponse> | NextResponse;
 
 /**
  * Wrapper for API routes that require standard authentication.
  * Automatically checks for session and discordId.
  */
 export function withAuth(handler: ApiHandler) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, context: any): Promise<NextResponse> => {
     try {
       const session = await auth();
       if (!session?.user?.discordId) {
@@ -25,11 +25,10 @@ export function withAuth(handler: ApiHandler) {
 
       const discordId = session.user.discordId;
       const role = resolveGangRole(discordId, session.user.discordRoles);
-
-      return await handler({ req, session, role, discordId });
+      return await handler({ req, session, role, discordId }, context?.params);
     } catch (error: any) {
-      console.error("API Error in withAuth:", error);
-      return NextResponse.json({ success: false, error: "Internal Server Error", details: error.message }, { status: 500 });
+      console.error("API Auth Error:", error);
+      return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
   };
 }
@@ -38,7 +37,7 @@ export function withAuth(handler: ApiHandler) {
  * Wrapper for API routes that require Manager authentication (Leader or Vice Leader).
  */
 export function withManagerAuth(handler: ApiHandler) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, context: any): Promise<NextResponse> => {
     try {
       const session = await auth();
       if (!session?.user?.discordId) {
@@ -52,10 +51,10 @@ export function withManagerAuth(handler: ApiHandler) {
         return NextResponse.json({ success: false, error: "Forbidden: Managers only" }, { status: 403 });
       }
 
-      return await handler({ req, session, role, discordId });
+      return await handler({ req, session, role, discordId }, context?.params);
     } catch (error: any) {
-      console.error("API Error in withManagerAuth:", error);
-      return NextResponse.json({ success: false, error: "Internal Server Error", details: error.message }, { status: 500 });
+      console.error("API Auth Error:", error);
+      return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
   };
 }

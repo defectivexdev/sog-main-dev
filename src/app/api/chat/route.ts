@@ -20,9 +20,23 @@ export const GET = withAuth(async ({ req }) => {
       take: 100
     });
     
-    // We return descending so we can just reverse it in the frontend or DB level, 
-    // but typically we want the latest 100.
-    return NextResponse.json({ success: true, data: messages.reverse() });
+    // Fetch replied messages
+    const replyIds = messages.map(m => m.replyToId).filter(Boolean) as string[];
+    let replyMap: Record<string, any> = {};
+    if (replyIds.length > 0) {
+      const repliedMessages = await prisma.chatMessage.findMany({
+        where: { id: { in: replyIds } },
+        select: { id: true, senderName: true, content: true, imageUrl: true }
+      });
+      repliedMessages.forEach(rm => replyMap[rm.id] = rm);
+    }
+    
+    const messagesWithReplies = messages.map(m => ({
+      ...m,
+      replyToMessage: m.replyToId ? replyMap[m.replyToId] : null
+    }));
+    
+    return NextResponse.json({ success: true, data: messagesWithReplies.reverse() });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Server Error" }, { status: 500 });
   }
@@ -45,7 +59,8 @@ export const POST = withAuth(async ({ req, session }) => {
         senderAvatar,
         content: body.content,
         imageUrl: body.imageUrl,
-        linkUrl: body.linkUrl
+        linkUrl: body.linkUrl,
+        replyToId: body.replyToId || null
       }
     });
     

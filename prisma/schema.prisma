@@ -283,6 +283,9 @@ model ChatMessage {
   imageUrl    String?
   linkUrl     String?
   isPinned    Boolean  @default(false)
+  replyToId   String?
+  reactions   Json?    // e.g. { "👍": ["userA"], "❤️": ["userB"] }
+  isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   @@index([createdAt])
