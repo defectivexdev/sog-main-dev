@@ -92,6 +92,39 @@ export default function ChatPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Command Interceptor
+    const msgContent = content.trim();
+    if (msgContent.startsWith("/clear ")) {
+      if (!isManager) {
+        showError("คุณไม่มีสิทธิ์ใช้คำสั่งนี้");
+        return;
+      }
+      const amount = parseInt(msgContent.split(" ")[1]);
+      if (!isNaN(amount) && amount > 0) {
+        setSending(true);
+        try {
+          const res = await fetch("/api/chat/clear", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount })
+          });
+          if (res.ok) {
+            setContent("");
+            mutate();
+            showSuccess(`ลบ ${amount} ข้อความล่าสุดสำเร็จ`);
+          } else {
+            showError("ลบข้อความล้มเหลว");
+          }
+        } catch {
+          showError("เกิดข้อผิดพลาด");
+        } finally {
+          setSending(false);
+        }
+        return;
+      }
+    }
+
     if (!content.trim() && !imageUrl.trim() && !linkUrl.trim()) return;
 
     setSending(true);
