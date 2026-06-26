@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2, Smile } from "lucide-react";
+import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2, Smile, Volume2, VolumeX } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/useToast";
@@ -19,7 +19,36 @@ export default function ChatPage() {
   const [showExtras, setShowExtras] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const previousMessagesCount = useRef(0);
+
+  // Play a simple pop sound using Web Audio API
+  const playNotificationSound = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+      
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    } catch (err) {
+      console.error("Audio error:", err);
+    }
+  };
 
   // Poll every 3 seconds
   const { data: fetchRes, mutate } = useSWR('/api/chat', fetcher, { refreshInterval: 3000 });
@@ -34,8 +63,22 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
+    if (messages.length > 0) {
+      const isNewMessage = messages.length > previousMessagesCount.current;
+      
+      // If there are new messages, check the latest one
+      if (isNewMessage && previousMessagesCount.current !== 0) {
+        const latestMessage = messages[messages.length - 1];
+        // Play sound only if it's not from me
+        if (latestMessage.senderName !== matchName) {
+          playNotificationSound();
+        }
+      }
+      
+      previousMessagesCount.current = messages.length;
+    }
     scrollToBottom();
-  }, [messages]);
+  }, [messages, matchName, soundEnabled]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,11 +115,34 @@ export default function ChatPage() {
 
   return (
     <div style={{ height: "calc(100vh - 120px)", display: "flex", flexDirection: "column", position: "relative" }}>
-      <div style={{ marginBottom: "16px", flexShrink: 0 }}>
-        <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <MessageSquare size={32} color="#c9a227" /> สภากาแฟ (Chat Room)
-        </h1>
-        <p className="page-subtitle">พูดคุยแลกเปลี่ยนข่าวสารในแก๊งค์ (อัปเดตเรียลไทม์)</p>
+      <div style={{ marginBottom: "16px", flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <MessageSquare size={32} color="#c9a227" /> สภากาแฟ (Chat Room)
+          </h1>
+          <p className="page-subtitle">พูดคุยแลกเปลี่ยนข่าวสารในแก๊งค์ (อัปเดตเรียลไทม์)</p>
+        </div>
+        
+        <button 
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: soundEnabled ? "#34d399" : "#94a3b8",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+            transition: "all 0.2s"
+          }}
+        >
+          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+            {soundEnabled ? "เปิดเสียง" : "ปิดเสียง"}
+          </span>
+        </button>
       </div>
 
       <div className="glass-card" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
