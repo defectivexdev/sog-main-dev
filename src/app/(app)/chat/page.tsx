@@ -25,6 +25,7 @@ export default function ChatPage() {
   const [replyTo, setReplyTo] = useState<any>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [activeReactionId, setActiveReactionId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previousMessagesCount = useRef(0);
   
@@ -247,7 +248,14 @@ export default function ChatPage() {
                       
                       {msg.imageUrl && (
                         <div style={{ marginTop: msg.content ? "8px" : "0" }}>
-                          <img src={msg.imageUrl} alt="attachment" style={{ maxWidth: "100%", maxHeight: "300px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }} />
+                          <img 
+                            src={msg.imageUrl} 
+                            alt="attachment" 
+                            style={{ maxWidth: "100%", maxHeight: "300px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", transition: "transform 0.2s" }} 
+                            onClick={() => setSelectedImage(msg.imageUrl)}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                          />
                         </div>
                       )}
                       
@@ -475,6 +483,37 @@ export default function ChatPage() {
           </form>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.85)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: "40px" }}
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.img 
+              initial={{ scale: 0.95 }} 
+              animate={{ scale: 1 }} 
+              exit={{ scale: 0.95 }} 
+              src={selectedImage} 
+              alt="preview" 
+              style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", borderRadius: "12px", cursor: "default", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }} 
+              onClick={(e) => e.stopPropagation()} 
+            />
+            <button 
+              onClick={() => setSelectedImage(null)} 
+              style={{ position: "absolute", top: "30px", right: "30px", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.2s" }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.2)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+            >
+              <X size={28} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
