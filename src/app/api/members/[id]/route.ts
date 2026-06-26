@@ -14,14 +14,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
     const whereClause = { memberName: { in: possibleNames } };
 
-    const [attendances, leaves, payments, requisitions] = await Promise.all([
+    const [attendances, leaves, payments, requisitions, unpaidFines] = await Promise.all([
       prisma.attendance.count({ where: whereClause }),
       prisma.leave.count({ where: { ...whereClause, status: "approved" } }),
       prisma.payment.aggregate({ 
         where: { ...whereClause, type: "income", status: "confirmed" },
         _sum: { amount: true }
       }),
-      prisma.requisition.count({ where: { ...whereClause, status: "delivered" } })
+      prisma.requisition.count({ where: { ...whereClause, status: "delivered" } }),
+      prisma.fine.findMany({ where: { ...whereClause, status: "unpaid" }, orderBy: { createdAt: 'desc' } })
     ]);
 
     // Fetch latest 3 activities for history
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           attendanceCount: attendances,
           leaveCount: leaves,
           totalDonated: payments._sum.amount || 0,
-          requisitionsCount: requisitions
+          requisitionsCount: requisitions,
+          unpaidFines: unpaidFines || []
         },
         history
       }

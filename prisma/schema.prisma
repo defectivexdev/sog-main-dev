@@ -257,3 +257,33 @@ model GangEvent {
   @@index([startDate])
   @@index([type])
 }
+
+model Fine {
+  id          String   @id @default(cuid())
+  memberId    String?  // Optional relation to Member
+  memberName  String
+  amount      Float
+  reason      String
+  status      String   @default("unpaid") // unpaid, paid
+  issuedBy    String?
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([memberName])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  senderName  String
+  senderAvatar String?
+  content     String?
+  imageUrl    String?
+  linkUrl     String?
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}

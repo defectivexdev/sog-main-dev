@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRole } from "@/hooks/useRole";
 import { motion, AnimatePresence } from "framer-motion";
 import Skeleton from "@/components/ui/Skeleton";
-import { Users, Search, Plus, X, Shield, Calendar, Activity, ClipboardList, DollarSign, PackageCheck, Phone, MessageSquare, Fingerprint, Wallet, Umbrella } from "lucide-react";
+import { Users, Search, Plus, X, Shield, Calendar, Activity, ClipboardList, DollarSign, PackageCheck, Phone, MessageSquare, Fingerprint, Wallet, Umbrella, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import RoleBadge from "@/components/ui/RoleBadge";
 import Toast from "@/components/ui/Toast";
@@ -32,6 +32,7 @@ interface ProfileStats {
   leaveCount: number;
   totalDonated: number;
   requisitionsCount: number;
+  unpaidFines?: any[];
 }
 
 const roleLabel: Record<string, string> = { admin: "แอดมิน", leader: "หัวหน้า", vice_leader: "รองหัวหน้า", member: "สมาชิก" };
@@ -52,6 +53,63 @@ function MembersContent() {
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [profileHistory, setProfileHistory] = useState<any[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  
+  // Fine Form State
+  const [showFineForm, setShowFineForm] = useState(false);
+  const [fineAmount, setFineAmount] = useState("");
+  const [fineReason, setFineReason] = useState("");
+
+  const handleMarkPaid = async (fineId: string) => {
+    try {
+      const res = await fetch("/api/fines/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fineId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showSuccess("ยืนยันการชำระเงินสำเร็จ");
+        // Update local stats unpaidFines array
+        if (profileStats) {
+          setProfileStats({
+            ...profileStats,
+            unpaidFines: (profileStats.unpaidFines || []).filter((f: any) => f.id !== fineId)
+          });
+        }
+      } else {
+        showError(data.error || "เกิดข้อผิดพลาด");
+      }
+    } catch (err) {
+      showError("เกิดข้อผิดพลาด");
+    }
+  };
+
+  const handleIssueFine = async (e: any) => {
+    e.preventDefault();
+    if (!selectedMember) return;
+    try {
+      const res = await fetch("/api/fines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberName: selectedMember.icName || selectedMember.name,
+          amount: Number(fineAmount),
+          reason: fineReason
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showSuccess("สั่งปรับเงินสำเร็จ");
+        setShowFineForm(false);
+        setFineAmount("");
+        setFineReason("");
+      } else {
+        showError(data.error || "เกิดข้อผิดพลาด");
+      }
+    } catch (err) {
+      showError("เกิดข้อผิดพลาด");
+    }
+  };
 
   useEffect(() => {
     fetch("/api/members").then((r) => r.json()).then((d) => {
@@ -313,8 +371,67 @@ function MembersContent() {
                       <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#fff" }}>{profileStats.requisitionsCount} <span style={{ fontSize: "0.8rem", fontWeight: 400, color: "#64748b" }}>ครั้ง</span></div>
                     </div>
                   </div>
+
+                  {/* Unpaid Fines List */}
+                  {profileStats.unpaidFines && profileStats.unpaidFines.length > 0 && (
+                    <div style={{ marginTop: "16px", marginBottom: "32px", padding: "16px", background: "rgba(248,113,113,0.05)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "12px" }}>
+                      <h4 style={{ color: "#f87171", margin: "0 0 12px", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <AlertTriangle size={16} /> รายการค่าปรับที่ค้างชำระ ({profileStats.unpaidFines.length} รายการ)
+                      </h4>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {profileStats.unpaidFines.map((fine: any) => (
+                          <div key={fine.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.2)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(248,113,113,0.1)" }}>
+                            <div>
+                              <div style={{ color: "#fff", fontSize: "0.9rem", fontWeight: 700 }}>{fine.reason}</div>
+                              <div style={{ color: "#fca5a5", fontSize: "0.8rem", marginTop: "4px" }}>สั่งปรับโดย: {fine.issuedBy} • {new Date(fine.createdAt).toLocaleDateString("th-TH")}</div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <div style={{ color: "#f87171", fontWeight: 800 }}>฿{fine.amount.toLocaleString()}</div>
+                              {isManager && (
+                                <button onClick={() => handleMarkPaid(fine.id)} style={{ background: "#34d399", color: "#000", border: "none", padding: "6px 12px", borderRadius: "6px", fontSize: "0.8rem", fontWeight: 700, cursor: "pointer" }}>
+                                  ชำระแล้ว
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : null}
+
+              {/* Fine Action for Managers */}
+              {isManager && selectedMember && (
+                <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <h3 style={{ color: "#f87171", fontSize: "1rem", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                      <AlertTriangle size={18} /> สั่งปรับเงิน (Issue Fine)
+                    </h3>
+                    <button onClick={() => setShowFineForm(!showFineForm)} style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", color: "#f87171", padding: "6px 12px", borderRadius: "8px", fontSize: "0.85rem", cursor: "pointer" }}>
+                      {showFineForm ? "ยกเลิก" : "เพิ่มค่าปรับ"}
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {showFineForm && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} style={{ overflow: "hidden" }}>
+                        <form onSubmit={handleIssueFine} style={{ background: "rgba(255,255,255,0.02)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(248,113,113,0.2)", display: "grid", gap: "12px" }}>
+                          <FormField label="จำนวนเงิน (บาท)" required>
+                            <input type="number" className="sog-input" value={fineAmount} onChange={(e) => setFineAmount(e.target.value)} placeholder="เช่น 50000" required min="1" />
+                          </FormField>
+                          <FormField label="สาเหตุ / ข้อหา" required>
+                            <input type="text" className="sog-input" value={fineReason} onChange={(e) => setFineReason(e.target.value)} placeholder="เช่น มาสาย, ปากแจ๋ว" required />
+                          </FormField>
+                          <button type="submit" style={{ background: "#f87171", color: "#fff", padding: "10px", borderRadius: "8px", border: "none", fontWeight: 700, cursor: "pointer", marginTop: "8px" }}>
+                            ยืนยันการปรับเงิน
+                          </button>
+                        </form>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
         )}

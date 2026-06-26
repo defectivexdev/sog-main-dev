@@ -26,7 +26,8 @@ import {
   User,
   History,
   Car,
-  Calendar
+  Calendar,
+  MessageSquare
 } from "lucide-react";
 import { useRole } from "@/hooks/useRole";
 
@@ -42,6 +43,7 @@ const navSections: NavSection[] = [
   {
     title: "COMMUNICATION",
     items: [
+      { label: "สภากาแฟ (Chat)", href: "/chat", icon: <MessageSquare size={18} /> },
       { label: "ข่าวสาร (Announcements)", href: "/announcements", icon: <Bell size={18} /> },
       { label: "ปฏิทินกิจกรรม", href: "/calendar", icon: <Calendar size={18} /> }
     ]

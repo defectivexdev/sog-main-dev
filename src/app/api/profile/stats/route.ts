@@ -28,6 +28,13 @@ export async function GET() {
       }
     });
 
+    // Calculate total attendance
+    const attendances = await prisma.attendance.count({
+      where: {
+        memberName: member.icName || member.name
+      }
+    });
+
     // Calculate total leave days
     // We fetch all approved leaves and sum up the days between startDate and endDate
     const leaves = await prisma.leave.findMany({
@@ -44,11 +51,23 @@ export async function GET() {
       totalLeaveDays += diffDays;
     });
 
+    // Calculate total unpaid fines
+    const fines = await prisma.fine.aggregate({
+      _sum: { amount: true },
+      where: {
+        memberName: member.icName || member.name,
+        status: "unpaid"
+      }
+    });
+
     return NextResponse.json({
       member,
       stats: {
         totalPaid: payments._sum.amount || 0,
-        totalLeaveDays
+        totalLeaves: leaves.length,
+        totalLeaveDays,
+        totalFines: fines._sum.amount || 0,
+        attendanceCount: attendances
       }
     });
 

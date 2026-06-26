@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, DollarSign, CheckCircle, Target } from "lucide-react";
 import Skeleton from "@/components/Skeleton";
+import { getDonatorTier, getAttendanceTier } from "@/lib/tiers";
 
 import useSWR from "swr";
 
@@ -29,7 +30,7 @@ export default function LeaderboardPage() {
     return "rgba(255,255,255,0.1)"; // Others
   };
 
-  const RankCard = ({ title, icon, dataList, valuePrefix = "", valueSuffix = "" }: any) => (
+  const RankCard = ({ title, icon, dataList, valuePrefix = "", valueSuffix = "", type = "donator" }: any) => (
     <div className="glass-card" style={{ padding: "24px", display: "flex", flexDirection: "column" }}>
       <h2 style={{ color: "#c9a227", fontWeight: 800, fontSize: "1.2rem", margin: "0 0 20px", display: "flex", alignItems: "center", gap: "8px" }}>
         {icon} {title}
@@ -85,9 +86,30 @@ export default function LeaderboardPage() {
                   }}>
                     {index + 1}
                   </div>
-                  <span style={{ color: index < 3 ? "#fff" : "#e2e8f0", fontWeight: index < 3 ? 800 : 600, fontSize: isTop3 ? "1.1rem" : "0.95rem" }}>
-                    {item.name}
-                  </span>
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ color: index < 3 ? "#fff" : "#e2e8f0", fontWeight: index < 3 ? 800 : 600, fontSize: isTop3 ? "1.1rem" : "0.95rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                      {item.name}
+                      {(() => {
+                        const tier = type === "donator" ? getDonatorTier(item.score) : getAttendanceTier(item.score);
+                        return (
+                          <span style={{ 
+                            background: tier.bgColor, 
+                            color: tier.color, 
+                            padding: "2px 6px", 
+                            borderRadius: "4px", 
+                            fontSize: "0.7rem", 
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            border: `1px solid ${tier.color}40`
+                          }}>
+                            {tier.icon} {tier.name}
+                          </span>
+                        );
+                      })()}
+                    </span>
+                  </div>
                 </div>
                 <div style={{ color: getRankColor(index), fontWeight: 800, fontSize: isTop3 ? "1.1rem" : "0.95rem" }}>
                   {valuePrefix}{item.score.toLocaleString()}{valueSuffix}
@@ -192,7 +214,8 @@ export default function LeaderboardPage() {
                 title="ขยันทำงาน (Top Attendance)" 
                 icon={<CheckCircle size={24} />} 
                 dataList={data.topAttendance} 
-                valueSuffix=" ครั้ง" 
+                valueSuffix=" ครั้ง"
+                type="attendance"
               />
             )}
           </motion.div>

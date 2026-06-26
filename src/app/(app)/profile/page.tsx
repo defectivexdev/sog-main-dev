@@ -3,7 +3,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { motion } from "framer-motion";
-import { User, Phone, Edit3, Save, MessageCircle, DollarSign, Umbrella, Crown, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User, Phone, Edit3, Save, MessageCircle, DollarSign, Umbrella, Crown, CheckCircle2, ShieldCheck, Briefcase } from "lucide-react";
+import { getDonatorTier, getAttendanceTier } from "@/lib/tiers";
 import GangIDCard from "@/components/GangIDCard";
 import Skeleton from "@/components/Skeleton";
 import { toast } from "sonner";
@@ -97,8 +98,45 @@ export default function ProfilePage() {
             <h3 style={{ color: "#e2e8f0", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
               <DollarSign size={20} color="#34d399" /> ยอดเงินส่งเข้าคลัง
             </h3>
-            <div style={{ fontSize: "2rem", fontWeight: 800, color: "#34d399" }}>
-              ฿{stats.totalPaid.toLocaleString()}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "2rem", fontWeight: 800, color: "#34d399" }}>
+                ฿{stats.totalPaid.toLocaleString()}
+              </div>
+              {(() => {
+                const tier = getDonatorTier(stats.totalPaid);
+                return (
+                  <div style={{ 
+                    background: tier.bgColor, color: tier.color, padding: "4px 10px", borderRadius: "8px", 
+                    fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px",
+                    border: `1px solid ${tier.color}40`
+                  }}>
+                    {tier.icon} {tier.name}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          <div className="glass-card" style={{ padding: "24px" }}>
+            <h3 style={{ color: "#e2e8f0", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Briefcase size={20} color="#a78bfa" /> จำนวนการเช็คชื่อ
+            </h3>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "2rem", fontWeight: 800, color: "#a78bfa" }}>
+                {stats.attendanceCount || 0} <span style={{ fontSize: "1rem", color: "#94a3b8" }}>ครั้ง</span>
+              </div>
+              {(() => {
+                const tier = getAttendanceTier(stats.attendanceCount || 0);
+                return (
+                  <div style={{ 
+                    background: tier.bgColor, color: tier.color, padding: "4px 10px", borderRadius: "8px", 
+                    fontSize: "0.85rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px",
+                    border: `1px solid ${tier.color}40`
+                  }}>
+                    {tier.icon} {tier.name}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -110,6 +148,20 @@ export default function ProfilePage() {
               {stats.totalLeaveDays} <span style={{ fontSize: "1rem", color: "#94a3b8" }}>วัน</span>
             </div>
           </div>
+
+          {stats.totalFines > 0 && (
+            <div style={{ padding: "24px", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "20px" }}>
+              <h3 style={{ color: "#f87171", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <DollarSign size={20} color="#f87171" /> ยอดค้างชำระ (ค่าปรับ)
+              </h3>
+              <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "#f87171" }}>
+                -฿{stats.totalFines.toLocaleString()}
+              </div>
+              <p style={{ color: "#fca5a5", fontSize: "0.85rem", marginTop: "8px", margin: 0 }}>
+                กรุณาชำระยอดค้างให้เรียบร้อยเพื่อหลีกเลี่ยงบทลงโทษ
+              </p>
+            </div>
+          )}
 
         </div>
 
