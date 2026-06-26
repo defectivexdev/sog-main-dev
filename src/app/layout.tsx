@@ -30,7 +30,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isEdge = /Edg\//i.test(userAgent);
   const isChrome = /Chrome\/|CriOS\//i.test(userAgent);
   const isFirefox = /Firefox\/|FxiOS\//i.test(userAgent);
-  const isAllowedBrowser = (isChrome || isFirefox) && !isEdge;
+  const isSafari = /Safari\//i.test(userAgent) && !isChrome && !isEdge;
+  const isAllowedBrowser = (isChrome || isFirefox || isSafari) && !isEdge;
 
   if (!isAllowedBrowser) {
     return (
@@ -40,10 +41,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <h1 style={{ color: "#f87171", fontSize: "2.5rem", margin: "0 0 16px" }}>🛑</h1>
             <h2 style={{ color: "#f87171", fontSize: "1.5rem", margin: "0 0 16px" }}>เบราว์เซอร์ไม่รองรับ</h2>
             <p style={{ fontSize: "1rem", lineHeight: "1.6", color: "#94a3b8", marginBottom: "20px" }}>
-              เพื่อประสิทธิภาพและความปลอดภัยสูงสุด ระบบ SOG Gang อนุญาตให้เข้าถึงผ่าน <b>Google Chrome</b> และ <b>Mozilla Firefox</b> เท่านั้น
+              เพื่อประสิทธิภาพและความปลอดภัยสูงสุด ระบบ SOG Gang อนุญาตให้เข้าถึงผ่าน <b>Google Chrome</b>, <b>Mozilla Firefox</b> และ <b>Safari</b> เท่านั้น
             </p>
             <p style={{ fontSize: "0.85rem", color: "#64748b" }}>
-              กรุณาเปลี่ยนไปใช้ Chrome หรือ Firefox เพื่อเข้าใช้งานระบบ
+              กรุณาเปลี่ยนไปใช้ Chrome, Firefox หรือ Safari เพื่อเข้าใช้งานระบบ
             </p>
           </div>
         </body>
