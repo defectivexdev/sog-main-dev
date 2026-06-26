@@ -132,7 +132,6 @@ export default function LeaderboardPage() {
             {[
               { id: "attendance", label: "ขยันทำงาน", icon: <CheckCircle size={16} /> },
               { id: "donators", label: "สายเปย์", icon: <DollarSign size={16} /> },
-              { id: "activity", label: "สายบวก", icon: <Target size={16} /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -193,14 +192,6 @@ export default function LeaderboardPage() {
                 title="ขยันทำงาน (Top Attendance)" 
                 icon={<CheckCircle size={24} />} 
                 dataList={data.topAttendance} 
-                valueSuffix=" ครั้ง" 
-              />
-            )}
-            {activeTab === "activity" && (
-              <RankCard 
-                title="สายบวก (Top Activities)" 
-                icon={<Target size={24} />} 
-                dataList={data.topActivity} 
                 valueSuffix=" ครั้ง" 
               />
             )}
