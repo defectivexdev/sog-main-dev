@@ -9,14 +9,16 @@ export const GET = withAuth(async ({ req }) => {
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get("limit") || "1000");
     const page = parseInt(searchParams.get("page") || "1");
+    const type = searchParams.get("type");
     
     const [data, total, incomeSumRaw, expenseSumRaw] = await Promise.all([
       prisma.payment.findMany({ 
+        where: type ? { type } : undefined,
         orderBy: { date: 'desc' },
         take: limit,
         skip: (page - 1) * limit 
       }),
-      prisma.payment.count(),
+      prisma.payment.count({ where: type ? { type } : undefined }),
       prisma.payment.aggregate({ _sum: { amount: true }, where: { type: "income", status: "confirmed" } }),
       prisma.payment.aggregate({ _sum: { amount: true }, where: { type: "expense", status: "confirmed" } })
     ]);
