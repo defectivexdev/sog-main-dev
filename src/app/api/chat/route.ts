@@ -4,6 +4,17 @@ import { withAuth } from "@/lib/apiAuth";
 
 export const GET = withAuth(async ({ req }) => {
   try {
+    // Lazy delete messages older than 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    // We don't need to await this if we don't want to block the response, but doing it async is fine.
+    // To avoid blocking the GET request completely, we just fire and forget, or await.
+    // But since Vercel Serverless might kill it if not awaited, we await it.
+    await prisma.chatMessage.deleteMany({
+      where: { createdAt: { lt: sevenDaysAgo }, isPinned: false }
+    });
+
     const messages = await prisma.chatMessage.findMany({
       orderBy: { createdAt: 'desc' },
       take: 100

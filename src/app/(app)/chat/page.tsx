@@ -2,10 +2,11 @@
 import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2 } from "lucide-react";
+import { Send, Image as ImageIcon, Link2, MessageSquare, Loader2, Smile } from "lucide-react";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/useToast";
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -16,6 +17,7 @@ export default function ChatPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [showExtras, setShowExtras] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -56,6 +58,7 @@ export default function ChatPage() {
         setImageUrl("");
         setLinkUrl("");
         setShowExtras(false);
+        setShowEmoji(false);
         mutate();
         setTimeout(scrollToBottom, 100);
       } else {
@@ -99,33 +102,38 @@ export default function ChatPage() {
                   animate={{ opacity: 1, y: 0 }}
                   style={{
                     display: "flex",
-                    alignItems: "flex-end",
-                    gap: "12px",
-                    alignSelf: isMe ? "flex-end" : "flex-start",
-                    maxWidth: "80%"
+                    alignItems: "flex-start",
+                    gap: "16px",
+                    width: "100%",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    background: isMe ? "rgba(255,255,255,0.02)" : "transparent",
+                    transition: "background 0.2s"
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = isMe ? "rgba(255,255,255,0.02)" : "transparent")}
                 >
-                  {!isMe && (
-                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                      {msg.senderAvatar ? <Image src={msg.senderAvatar} alt="avatar" width={36} height={36} /> : "👤"}
-                    </div>
-                  )}
+                  <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                    {msg.senderAvatar ? <Image src={msg.senderAvatar} alt="avatar" width={40} height={40} /> : <div style={{ fontSize: "1.2rem" }}>👤</div>}
+                  </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start" }}>
-                    {!isMe && <span style={{ fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px", marginLeft: "4px" }}>{msg.senderName}</span>}
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "4px" }}>
+                      <span style={{ fontSize: "1rem", color: isMe ? "#c9a227" : "#e2e8f0", fontWeight: 700 }}>
+                        {msg.senderName}
+                      </span>
+                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                        {new Date(msg.createdAt).toLocaleDateString("th-TH")} {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
                     
                     <div style={{
-                      background: isMe ? "linear-gradient(135deg, #c9a227, #b45309)" : "rgba(255,255,255,0.05)",
-                      padding: "12px 16px",
-                      borderRadius: isMe ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
-                      color: isMe ? "#fff" : "#e2e8f0",
-                      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                      border: isMe ? "none" : "1px solid rgba(255,255,255,0.05)",
+                      color: "#cbd5e1",
                       display: "flex",
                       flexDirection: "column",
                       gap: "8px"
                     }}>
-                      {msg.content && <div style={{ lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{msg.content}</div>}
+                      {msg.content && <div style={{ lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "pre-wrap", fontSize: "0.95rem" }}>{msg.content}</div>}
                       
                       {msg.imageUrl && (
                         <div style={{ marginTop: msg.content ? "8px" : "0" }}>
@@ -138,23 +146,20 @@ export default function ChatPage() {
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "6px",
-                          background: isMe ? "rgba(0,0,0,0.2)" : "rgba(56,189,248,0.1)",
-                          color: isMe ? "#fff" : "#38bdf8",
+                          background: "rgba(56,189,248,0.1)",
+                          color: "#38bdf8",
                           padding: "6px 12px",
                           borderRadius: "6px",
                           fontSize: "0.85rem",
                           textDecoration: "none",
                           marginTop: "4px",
-                          border: isMe ? "none" : "1px solid rgba(56,189,248,0.2)"
+                          border: "1px solid rgba(56,189,248,0.2)",
+                          width: "fit-content"
                         }}>
                           <Link2 size={14} /> เปิดลิ้งค์ที่แนบมา
                         </a>
                       )}
                     </div>
-                    
-                    <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px", marginRight: isMe ? "4px" : "0", marginLeft: !isMe ? "4px" : "0" }}>
-                      {new Date(msg.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
                   </div>
                 </motion.div>
               );
@@ -164,8 +169,26 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div style={{ background: "rgba(15,22,41,0.8)", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "16px" }}>
+        <div style={{ background: "rgba(15,22,41,0.8)", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "16px", position: "relative" }}>
           
+          <AnimatePresence>
+            {showEmoji && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: 20 }} 
+                style={{ position: "absolute", bottom: "100%", right: "16px", marginBottom: "12px", zIndex: 100 }}
+              >
+                <EmojiPicker 
+                  theme={Theme.DARK}
+                  onEmojiClick={(emojiObject) => {
+                    setContent(prev => prev + emojiObject.emoji);
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {showExtras && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} style={{ overflow: "hidden", marginBottom: "12px", display: "flex", gap: "12px" }}>
@@ -189,13 +212,13 @@ export default function ChatPage() {
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSend} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <form onSubmit={handleSend} style={{ display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.05)", borderRadius: "24px", padding: "4px" }}>
             <button 
               type="button" 
               onClick={() => setShowExtras(!showExtras)}
               style={{ 
-                width: "44px", height: "44px", borderRadius: "12px", 
-                background: showExtras ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", 
+                width: "44px", height: "44px", borderRadius: "20px", 
+                background: "transparent", 
                 border: "none", color: showExtras ? "#c9a227" : "#94a3b8", 
                 display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                 transition: "all 0.2s"
@@ -207,26 +230,40 @@ export default function ChatPage() {
             <input 
               type="text" 
               className="sog-input" 
-              placeholder="พิมพ์ข้อความ..." 
+              placeholder="พูดคุยเรื่องทั่วไปในแก๊งค์..." 
               value={content} 
               onChange={(e) => setContent(e.target.value)}
-              style={{ flex: 1, borderRadius: "24px", padding: "12px 20px" }}
+              style={{ flex: 1, borderRadius: "24px", padding: "12px", background: "transparent", border: "none", outline: "none", color: "#fff" }}
             />
             
+            <button 
+              type="button" 
+              onClick={() => setShowEmoji(!showEmoji)}
+              style={{ 
+                width: "40px", height: "40px", borderRadius: "50%", 
+                background: "transparent", 
+                border: "none", color: showEmoji ? "#c9a227" : "#94a3b8", 
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <Smile size={20} />
+            </button>
+
             <button 
               type="submit" 
               disabled={sending || (!content && !imageUrl && !linkUrl)}
               style={{ 
-                width: "44px", height: "44px", borderRadius: "50%", 
-                background: "linear-gradient(135deg, #c9a227, #b45309)", 
-                border: "none", color: "#fff", 
+                width: "44px", height: "44px", borderRadius: "20px", 
+                background: (!content && !imageUrl && !linkUrl) ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg, #c9a227, #b45309)", 
+                border: "none", color: (!content && !imageUrl && !linkUrl) ? "#94a3b8" : "#fff", 
                 display: "flex", alignItems: "center", justifyContent: "center", 
                 cursor: sending ? "not-allowed" : "pointer",
                 opacity: sending ? 0.7 : 1,
-                boxShadow: "0 4px 10px rgba(201,162,39,0.3)"
+                transition: "all 0.2s"
               }}
             >
-              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} style={{ marginLeft: "2px", marginTop: "2px" }} />}
+              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             </button>
           </form>
         </div>
