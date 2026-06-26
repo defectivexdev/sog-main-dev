@@ -8,10 +8,11 @@ export function SWRProvider({ children }: { children: ReactNode }) {
     <SWRConfig 
       value={{
         fetcher: (url: string) => fetch(url).then(res => res.json()),
-        revalidateOnFocus: false, // Don't refetch when user switches tabs
-        dedupingInterval: 5000, // Dedupe requests within 5 seconds
-        keepPreviousData: true, // Prevent loading flickers when fetching new data
-        shouldRetryOnError: false // Prevent spamming retries if API fails
+        revalidateOnFocus: true, // Refetch when user switches tabs
+        dedupingInterval: 2000, 
+        refreshInterval: 5000, // Auto refresh all data every 5 seconds
+        keepPreviousData: true,
+        shouldRetryOnError: false
       }}
     >
       {children}
