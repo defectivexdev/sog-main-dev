@@ -26,7 +26,9 @@ export default function ChatPage() {
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [activeReactionId, setActiveReactionId] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const previousMessagesCount = useRef(0);
   
   const isManager = ["admin", "leader", "vice_leader"].includes((session?.user as any)?.gangRole || (session?.user as any)?.role || "");
@@ -143,6 +145,35 @@ export default function ChatPage() {
       mutate();
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        setImageUrl(data.url);
+        setShowExtras(true);
+        showSuccess("อัปโหลดรูปภาพสำเร็จ");
+      } else {
+        showError(data.error || "อัปโหลดรูปภาพล้มเหลว");
+      }
+    } catch (err) {
+      showError("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -428,18 +459,26 @@ export default function ChatPage() {
           </AnimatePresence>
 
           <form onSubmit={handleSend} style={{ display: "flex", gap: "12px", alignItems: "center", background: "rgba(255,255,255,0.05)", borderRadius: "24px", padding: "4px" }}>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: "none" }} 
+              accept="image/*" 
+              onChange={handleImageUpload} 
+            />
             <button 
               type="button" 
-              onClick={() => setShowExtras(!showExtras)}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
               style={{ 
                 width: "44px", height: "44px", borderRadius: "20px", 
                 background: "transparent", 
-                border: "none", color: showExtras ? "#c9a227" : "#94a3b8", 
-                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                border: "none", color: imageUrl ? "#c9a227" : "#94a3b8", 
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: uploadingImage ? "not-allowed" : "pointer",
                 transition: "all 0.2s"
               }}
             >
-              <ImageIcon size={20} />
+              {uploadingImage ? <Loader2 size={20} className="spin" /> : <ImageIcon size={20} />}
             </button>
             
             <input 
